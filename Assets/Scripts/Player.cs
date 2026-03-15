@@ -39,8 +39,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     }
 
     public override void FixedUpdateNetwork(){
-        if(!Object.HasStateAuthority) return;
-
+        if(KitchenGameManager.Instance == null) return;
         if(KitchenGameManager.Instance.IsPaused) return;
 
         if(!KitchenGameManager.Instance.IsGamePlaying() &&
@@ -49,24 +48,40 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         }
 
         if(GetInput(out PlayerNetworkInput input)){
-            // Handle game start
+            // Handle game start (host only)
             if(KitchenGameManager.Instance.IsWaitingToStart()){
-                var pressed = input.buttons.GetPressed(PreviousButtons);
-                if(pressed.IsSet(InputButton.Interact)){
-                    KitchenGameManager.Instance.TryStartGame();
+                if(Object.HasStateAuthority){
+                    var pressed = input.buttons.GetPressed(PreviousButtons);
+                    if(pressed.IsSet(InputButton.Interact)){
+                        KitchenGameManager.Instance.TryStartGame();
+                    }
+                    PreviousButtons = input.buttons;
                 }
-                PreviousButtons = input.buttons;
                 return;
             }
 
             HandleMovement(input);
-            HandleInteractions(input);
+            HandleCounterSelection(input);
 
-            PreviousButtons = input.buttons;
+            // Only host executes interactions (spawn/modify networked objects)
+            if(Object.HasStateAuthority){
+                var pressed = input.buttons.GetPressed(PreviousButtons);
+                if(pressed.IsSet(InputButton.Interact)){
+                    if(selectedCounter != null){
+                        selectedCounter.Interact(this);
+                    }
+                }
+                if(pressed.IsSet(InputButton.InteractAlternate)){
+                    if(selectedCounter != null){
+                        selectedCounter.InteractAlternate(this);
+                    }
+                }
+                PreviousButtons = input.buttons;
+            }
         }
     }
 
-    private void HandleInteractions(PlayerNetworkInput input){
+    private void HandleCounterSelection(PlayerNetworkInput input){
         Vector2 inputVector = input.moveDirection;
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
@@ -84,19 +99,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
             }
         }else{
             SetSelectedCounter(null);
-        }
-
-        var pressed = input.buttons.GetPressed(PreviousButtons);
-
-        if(pressed.IsSet(InputButton.Interact)){
-            if(selectedCounter != null){
-                selectedCounter.Interact(this);
-            }
-        }
-        if(pressed.IsSet(InputButton.InteractAlternate)){
-            if(selectedCounter != null){
-                selectedCounter.InteractAlternate(this);
-            }
         }
     }
 
