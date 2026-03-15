@@ -36,22 +36,51 @@ public class StoveCounter : BaseCounter, IHasProgress
         foreach(var propertyName in changeDetector.DetectChanges(this)){
             switch(propertyName){
                 case nameof(NetworkedState):
+                    State newState = (State)NetworkedState;
+
+                    // Resolve recipe caches on ALL clients (not just host)
+                    if(newState == State.Frying && HasKitchenObject()){
+                        fryingRecipeSO = GetFryingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+                    }
+                    if(newState == State.Fried && HasKitchenObject()){
+                        burningRecipeSO = GetBurningRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+                    }
+
+                    // Reset progress bar on terminal states
+                    if(newState == State.Idle || newState == State.Burned){
+                        fryingRecipeSO = null;
+                        burningRecipeSO = null;
+                        OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
+                            progressNormalized = 0f
+                        });
+                    }
+
                     OnStageChanged?.Invoke(this, new OnStageChangedEventArgs{
-                        state = (State)NetworkedState
+                        state = newState
                     });
                     break;
                 case nameof(FryingTimer):
-                    if((State)NetworkedState == State.Frying && fryingRecipeSO != null){
-                        OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
-                            progressNormalized = FryingTimer / fryingRecipeSO.fryingTimerMax
-                        });
+                    if((State)NetworkedState == State.Frying){
+                        if(fryingRecipeSO == null && HasKitchenObject()){
+                            fryingRecipeSO = GetFryingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+                        }
+                        if(fryingRecipeSO != null){
+                            OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
+                                progressNormalized = Mathf.Clamp01(FryingTimer / fryingRecipeSO.fryingTimerMax)
+                            });
+                        }
                     }
                     break;
                 case nameof(BurningTimer):
-                    if((State)NetworkedState == State.Fried && burningRecipeSO != null){
-                        OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
-                            progressNormalized = BurningTimer / burningRecipeSO.burningTimerMax
-                        });
+                    if((State)NetworkedState == State.Fried){
+                        if(burningRecipeSO == null && HasKitchenObject()){
+                            burningRecipeSO = GetBurningRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+                        }
+                        if(burningRecipeSO != null){
+                            OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
+                                progressNormalized = Mathf.Clamp01(BurningTimer / burningRecipeSO.burningTimerMax)
+                            });
+                        }
                     }
                     break;
             }

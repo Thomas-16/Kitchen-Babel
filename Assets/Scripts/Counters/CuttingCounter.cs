@@ -39,12 +39,16 @@ public class CuttingCounter : BaseCounter, IHasProgress
             HasKitchenObject() ? GetKitchenObject().GetKitchenObjectSO() : null
         );
 
-        OnCut?.Invoke(this, EventArgs.Empty);
-        OnAnyCut?.Invoke(this, EventArgs.Empty);
-
-        if(cuttingRecipeSO != null){
+        if(cuttingRecipeSO != null && CuttingProgress > 0){
+            OnCut?.Invoke(this, EventArgs.Empty);
+            OnAnyCut?.Invoke(this, EventArgs.Empty);
             OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
                 progressNormalized = (float)CuttingProgress / cuttingRecipeSO.cuttingProgressMax
+            });
+        } else {
+            // Recipe not found (item completed/removed) or progress reset — hide bar
+            OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
+                progressNormalized = 0f
             });
         }
     }
@@ -56,12 +60,6 @@ public class CuttingCounter : BaseCounter, IHasProgress
                 if(HasRecipeWithInput(player.GetKitchenObject().GetKitchenObjectSO())){
                     player.GetKitchenObject().SetKitchenObjectParent(this);
                     CuttingProgress = 0;
-
-                    CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
-
-                    OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs{
-                        progressNormalized = (float)CuttingProgress / cuttingRecipeSO.cuttingProgressMax
-                    });
                 }
             }
         }else{
@@ -73,6 +71,7 @@ public class CuttingCounter : BaseCounter, IHasProgress
                 }
             }else{
                 GetKitchenObject().SetKitchenObjectParent(player);
+                CuttingProgress = 0;
             }
         }
     }
@@ -88,6 +87,7 @@ public class CuttingCounter : BaseCounter, IHasProgress
                 GetKitchenObject().DestroySelf();
 
                 KitchenObject.SpawnKitchenObject(outputKitchenObjectSO, this);
+                CuttingProgress = 0;
             }
         }
     }
