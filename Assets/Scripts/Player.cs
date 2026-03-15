@@ -21,6 +21,8 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
     [Networked] public NetworkBool IsWalking { get; set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
+    [Networked] private Vector3 NetworkedPosition { get; set; }
+    [Networked] private Quaternion NetworkedRotation { get; set; }
 
     private Vector3 lastInteractDir;
     private BaseCounter selectedCounter;
@@ -130,8 +132,21 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         }
 
         IsWalking = moveDir != Vector3.zero;
-        float rotateSpeed = 10f;
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, Runner.DeltaTime * rotateSpeed);
+        if(IsWalking){
+            float rotateSpeed = 10f;
+            transform.forward = Vector3.Slerp(transform.forward, moveDir, Runner.DeltaTime * rotateSpeed);
+        }
+        NetworkedPosition = transform.position;
+        NetworkedRotation = transform.rotation;
+    }
+
+    public override void Render(){
+        // Local player: position is already correct from FixedUpdateNetwork prediction
+        // Remote players: interpolate toward the latest networked state
+        if(!HasInputAuthority){
+            transform.position = Vector3.Lerp(transform.position, NetworkedPosition, Time.deltaTime * 15f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, NetworkedRotation, Time.deltaTime * 15f);
+        }
     }
 
     private void SetSelectedCounter(BaseCounter selectedCounter){
