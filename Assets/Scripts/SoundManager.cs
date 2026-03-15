@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using System;
 
@@ -19,12 +17,22 @@ public class SoundManager : MonoBehaviour
         volume = PlayerPrefs.GetFloat(PLAYER_PREFS_SOUND_EFFECTS_VOLUME, volume);
     }
     private void Start() {
-        DeliveryManager.Instance.OnRecipeSuccess += DeliveryManager_OnRecipeSuccess;
-        DeliveryManager.Instance.OnRecipeFailed += DeliveryManager_OnRecipeFailed;
+        DeliveryManager.OnInstanceReady += DeliveryManager_OnInstanceReady;
+        if(DeliveryManager.Instance != null){
+            SubscribeToDeliveryManager();
+        }
+
         CuttingCounter.OnAnyCut += CuttingCounter_OnAnyCut;
-        Player.Instance.OnPickedSomething += Player_OnPickedSomething;
+        Player.OnAnyPickedSomething += Player_OnAnyPickedSomething;
         BaseCounter.OnAnyObjectPlacedHere += BaseCounter_OnAnyObjectPlacedHere;
         TrashCounter.OnAnyObjectTrashed += TrashCounter_OnAnyObjectTrashed;
+    }
+    private void DeliveryManager_OnInstanceReady(object sender, EventArgs e){
+        SubscribeToDeliveryManager();
+    }
+    private void SubscribeToDeliveryManager(){
+        DeliveryManager.Instance.OnRecipeSuccess += DeliveryManager_OnRecipeSuccess;
+        DeliveryManager.Instance.OnRecipeFailed += DeliveryManager_OnRecipeFailed;
     }
 
     private void TrashCounter_OnAnyObjectTrashed(object sender, EventArgs e){
@@ -33,8 +41,11 @@ public class SoundManager : MonoBehaviour
     private void BaseCounter_OnAnyObjectPlacedHere(object sender, EventArgs e){
         PlaySound(audioClipRefsSO.objectDrop, (sender as BaseCounter).transform.position);
     }
-    private void Player_OnPickedSomething(object sender, EventArgs e){
-        PlaySound(audioClipRefsSO.objectPickup, Player.Instance.transform.position);
+    private void Player_OnAnyPickedSomething(object sender, EventArgs e){
+        Player player = sender as Player;
+        if(player != null){
+            PlaySound(audioClipRefsSO.objectPickup, player.transform.position);
+        }
     }
     private void CuttingCounter_OnAnyCut(object sender, EventArgs e){
         PlaySound(audioClipRefsSO.chop, (sender as CuttingCounter).transform.position);

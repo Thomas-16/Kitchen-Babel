@@ -1,11 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
 using System;
 
-public class KitchenGameManager : MonoBehaviour
+public class KitchenGameManager : NetworkBehaviour
 {
     public static KitchenGameManager Instance {get; private set;}
+
+    public static event EventHandler OnInstanceReady;
 
     public event EventHandler OnStateChanged;
     public event EventHandler OnGamePaused;
@@ -17,81 +18,109 @@ public class KitchenGameManager : MonoBehaviour
         GamePlaying,
         GameOver,
     }
-    private State state;
-    private float countdownTostartTimer = 3f;
-    private float gamePlayingTimer;
-    private float gamePlayingTimerMax = 60f;
-    private bool isGamePaused = false;
 
-    private void Awake() {
+    [Networked] public int NetworkedState { get; set; }
+    [Networked] public float CountdownTimer { get; set; }
+    [Networked] public float GamePlayingTimer { get; set; }
+    [Networked] public NetworkBool IsPaused { get; set; }
+
+    private float gamePlayingTimerMax = 60f;
+    private ChangeDetector changeDetector;
+    private bool localIsPaused;
+
+    public static void ResetStaticData(){
+        OnInstanceReady = null;
+    }
+
+    public override void Spawned(){
         Instance = this;
-        state = State.WaitingToStart;
-    }
-    private void Start() {
-        GameInput.Instance.OnPausedAction += GameInput_OnPausedAction;
-        GameInput.Instance.OnInteractAction += GameInput_OnInteractAction;
-    }
-    private void GameInput_OnInteractAction(object sender, EventArgs e){
-        if(state == State.WaitingToStart){
-            state = State.CountdownToStart;
-            OnStateChanged?.Invoke(this, EventArgs.Empty);
+        changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
+        OnInstanceReady?.Invoke(this, EventArgs.Empty);
+
+        if(HasStateAuthority){
+            NetworkedState = (int)State.WaitingToStart;
+            CountdownTimer = 3f;
+        }
+
+        // Only host listens to pause input
+        if(HasStateAuthority){
+            GameInput.Instance.OnPausedAction += GameInput_OnPausedAction;
         }
     }
+
     private void GameInput_OnPausedAction(object sender, EventArgs e){
         TogglePauseGame();
     }
-    private void Update() {
-        switch(state){
+
+    public override void Render(){
+        foreach(var propertyName in changeDetector.DetectChanges(this)){
+            switch(propertyName){
+                case nameof(NetworkedState):
+                    OnStateChanged?.Invoke(this, EventArgs.Empty);
+                    break;
+                case nameof(IsPaused):
+                    if(IsPaused){
+                        OnGamePaused?.Invoke(this, EventArgs.Empty);
+                    }else{
+                        OnGameUnpaused?.Invoke(this, EventArgs.Empty);
+                    }
+                    break;
+            }
+        }
+    }
+
+    public override void FixedUpdateNetwork(){
+        if(!HasStateAuthority) return;
+        if(IsPaused) return;
+
+        State currentState = (State)NetworkedState;
+        switch(currentState){
             case State.WaitingToStart:
-                
                 break;
             case State.CountdownToStart:
-                countdownTostartTimer -= Time.deltaTime;
-                if(countdownTostartTimer < 0){
-                    state = State.GamePlaying;
-                    gamePlayingTimer = gamePlayingTimerMax;
-                    OnStateChanged?.Invoke(this, EventArgs.Empty);
+                CountdownTimer -= Runner.DeltaTime;
+                if(CountdownTimer < 0){
+                    NetworkedState = (int)State.GamePlaying;
+                    GamePlayingTimer = gamePlayingTimerMax;
                 }
                 break;
             case State.GamePlaying:
-                gamePlayingTimer -= Time.deltaTime;
-                if(gamePlayingTimer < 0){
-                    state = State.GameOver;
-                    OnStateChanged?.Invoke(this, EventArgs.Empty);
+                GamePlayingTimer -= Runner.DeltaTime;
+                if(GamePlayingTimer < 0){
+                    NetworkedState = (int)State.GameOver;
                 }
                 break;
             case State.GameOver:
-
                 break;
-            
+        }
+    }
+
+    public void TryStartGame(){
+        if(HasStateAuthority && (State)NetworkedState == State.WaitingToStart){
+            NetworkedState = (int)State.CountdownToStart;
         }
     }
 
     public bool IsGamePlaying(){
-        return state == State.GamePlaying;
+        return (State)NetworkedState == State.GamePlaying;
+    }
+    public bool IsWaitingToStart(){
+        return (State)NetworkedState == State.WaitingToStart;
     }
     public bool IsCountdownToStartActive(){
-        return state == State.CountdownToStart;
+        return (State)NetworkedState == State.CountdownToStart;
     }
     public float GetCountdownToStartTimer(){
-        return countdownTostartTimer;
+        return CountdownTimer;
     }
     public bool IsGameOver(){
-        return state == State.GameOver;
+        return (State)NetworkedState == State.GameOver;
     }
     public float GetGamePlayingTimerNormalized(){
-        return 1 - gamePlayingTimer / gamePlayingTimerMax;
+        return 1 - GamePlayingTimer / gamePlayingTimerMax;
     }
     public void TogglePauseGame(){
-        isGamePaused = !isGamePaused;
-        if(isGamePaused){
-            Time.timeScale = 0f;
-            
-            OnGamePaused?.Invoke(this, EventArgs.Empty);
-        }else{
-            Time.timeScale = 1f;
-
-            OnGameUnpaused?.Invoke(this, EventArgs.Empty);
-        }
+        if(!HasStateAuthority) return;
+        IsPaused = !IsPaused;
     }
 }

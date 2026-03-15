@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using System;
 
@@ -12,15 +10,23 @@ public class DeliveryManagerUI : MonoBehaviour
         recipeTemplate.gameObject.SetActive(false);
     }
     private void Start() {
+        DeliveryManager.OnInstanceReady += DeliveryManager_OnInstanceReady;
+        if(DeliveryManager.Instance != null){
+            SubscribeToManager();
+        }
+    }
+    private void DeliveryManager_OnInstanceReady(object sender, EventArgs e){
+        SubscribeToManager();
+    }
+    private void SubscribeToManager(){
         DeliveryManager.Instance.OnRecipeSpawned += DeliveryManager_OnRecipeSpawned;
         DeliveryManager.Instance.OnRecipeCompleted += DeliveryManager_OnRecipeCompleted;
-
         UpdateVisual();
     }
     private void DeliveryManager_OnRecipeCompleted(object sender, EventArgs e){
         UpdateVisual();
     }
-    private void DeliveryManager_OnRecipeSpawned(object sender, System.EventArgs e){
+    private void DeliveryManager_OnRecipeSpawned(object sender, EventArgs e){
         UpdateVisual();
     }
     private void UpdateVisual() {

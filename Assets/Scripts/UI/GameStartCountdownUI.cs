@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
@@ -17,9 +15,14 @@ public class GameStartCountdownUI : MonoBehaviour
         animator = GetComponent<Animator>();
     }
     private void Start() {
-        KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
-
+        KitchenGameManager.OnInstanceReady += KitchenGameManager_OnInstanceReady;
+        if(KitchenGameManager.Instance != null){
+            KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
+        }
         Hide();
+    }
+    private void KitchenGameManager_OnInstanceReady(object sender, EventArgs e){
+        KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
     }
     private void KitchenGameManager_OnStateChanged(object sender, EventArgs e){
         if(KitchenGameManager.Instance.IsCountdownToStartActive()){
@@ -29,6 +32,7 @@ public class GameStartCountdownUI : MonoBehaviour
         }
     }
     private void Update() {
+        if(KitchenGameManager.Instance == null) return;
         int countdownNumber = Mathf.CeilToInt(KitchenGameManager.Instance.GetCountdownToStartTimer());
         countdownText.text = countdownNumber.ToString();
 

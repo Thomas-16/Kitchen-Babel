@@ -74,6 +74,26 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: e1c23b5aded59d84da30738d3267a6c9,
         type: 3}
+    - target: {fileID: 6601272376335930642, guid: eb028bddb20f533439dd417b71c2d150,
+        type: 3}
+      propertyPath: Flags
+      value: 262145
+      objectReference: {fileID: 0}
+    - target: {fileID: 6601272376335930642, guid: eb028bddb20f533439dd417b71c2d150,
+        type: 3}
+      propertyPath: SortKey
+      value: 65899676
+      objectReference: {fileID: 0}
+    - target: {fileID: 6601272376335930642, guid: eb028bddb20f533439dd417b71c2d150,
+        type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6601272376335930642, guid: eb028bddb20f533439dd417b71c2d150,
+        type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 6711452331184879590}
     - target: {fileID: 7586922572932489967, guid: eb028bddb20f533439dd417b71c2d150,
         type: 3}
       propertyPath: kitchenObjectSO
@@ -85,3 +105,15 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: eb028bddb20f533439dd417b71c2d150, type: 3}
+--- !u!114 &6711452331184879590 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7586922572932489967, guid: eb028bddb20f533439dd417b71c2d150,
+    type: 3}
+  m_PrefabInstance: {fileID: 3776822115483079945}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2623bd446277c814d9ee474f16d43bc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

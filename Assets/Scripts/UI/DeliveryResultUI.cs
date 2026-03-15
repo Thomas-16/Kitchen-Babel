@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -23,10 +21,18 @@ public class DeliveryResultUI : MonoBehaviour
         animator = GetComponent<Animator>();
     }
     private void Start() {
+        DeliveryManager.OnInstanceReady += DeliveryManager_OnInstanceReady;
+        if(DeliveryManager.Instance != null){
+            SubscribeToManager();
+        }
+        gameObject.SetActive(false);
+    }
+    private void DeliveryManager_OnInstanceReady(object sender, EventArgs e){
+        SubscribeToManager();
+    }
+    private void SubscribeToManager(){
         DeliveryManager.Instance.OnRecipeSuccess += DeliveryManager_OnRecipeSucess;
         DeliveryManager.Instance.OnRecipeFailed += DeliveryManager_OnRecipeFailed;
-
-        gameObject.SetActive(false);
     }
     private void DeliveryManager_OnRecipeFailed(object sender, EventArgs e){
         gameObject.SetActive(true);

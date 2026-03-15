@@ -1,9 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
 using System;
 
-public class DeliveryManager : MonoBehaviour
+public class DeliveryManager : NetworkBehaviour
 {
     public event EventHandler OnRecipeSpawned;
     public event EventHandler OnRecipeCompleted;
@@ -11,40 +11,61 @@ public class DeliveryManager : MonoBehaviour
     public event EventHandler OnRecipeFailed;
 
     public static DeliveryManager Instance {get; private set;}
+    public static event EventHandler OnInstanceReady;
+
+    public static void ResetStaticData(){
+        OnInstanceReady = null;
+    }
     [SerializeField] private RecipeListSO recipeListSO;
 
-    private List<RecipeSO> waitingRecipeSOList;
+    [Networked, Capacity(4)] public NetworkLinkedList<int> WaitingRecipeIndices => default;
+    [Networked] public int SuccessfulRecipesAmount { get; set; }
+
     private float spawnRecipeTimer;
     private float spawnRecipeTimerMax = 4f;
     private int waitingRecipeMax = 4;
-    private int successfulRecipesAmount;
+    private ChangeDetector changeDetector;
+    private int lastKnownRecipeCount;
 
-    private void Awake() {
+    public override void Spawned(){
         Instance = this;
-
-        waitingRecipeSOList = new List<RecipeSO>();
+        changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
+        lastKnownRecipeCount = 0;
+        OnInstanceReady?.Invoke(this, EventArgs.Empty);
     }
-    private void Update() {
-        if(KitchenGameManager.Instance.IsGamePlaying()){
 
-            spawnRecipeTimer -= Time.deltaTime;
+    public override void Render(){
+        int currentCount = WaitingRecipeIndices.Count;
+        if(currentCount != lastKnownRecipeCount){
+            if(currentCount > lastKnownRecipeCount){
+                OnRecipeSpawned?.Invoke(this, EventArgs.Empty);
+            }else{
+                OnRecipeCompleted?.Invoke(this, EventArgs.Empty);
+            }
+            lastKnownRecipeCount = currentCount;
+        }
+    }
+
+    public override void FixedUpdateNetwork(){
+        if(!HasStateAuthority) return;
+        if(KitchenGameManager.Instance.IsPaused) return;
+
+        if(KitchenGameManager.Instance.IsGamePlaying()){
+            spawnRecipeTimer -= Runner.DeltaTime;
             if(spawnRecipeTimer <= 0f){
                 spawnRecipeTimer = spawnRecipeTimerMax;
 
-                if(waitingRecipeSOList.Count < waitingRecipeMax){
-                    RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[UnityEngine.Random.Range(0,recipeListSO.recipeSOList.Count)];
-                    
-                    waitingRecipeSOList.Add(waitingRecipeSO);
-
-                    OnRecipeSpawned?.Invoke(this, EventArgs.Empty);
+                if(WaitingRecipeIndices.Count < waitingRecipeMax){
+                    int recipeIndex = UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count);
+                    WaitingRecipeIndices.Add(recipeIndex);
                 }
             }
         }
     }
 
     public void DeliverRecipe(PlateKitchenObject plateKitchenObject){
-        for(int i = 0; i < waitingRecipeSOList.Count; i++){
-            RecipeSO waitingRecipeSO = waitingRecipeSOList[i];
+        for(int i = 0; i < WaitingRecipeIndices.Count; i++){
+            RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[WaitingRecipeIndices[i]];
 
             if(waitingRecipeSO.kitchenObjectSOList.Count == plateKitchenObject.GetKitchenObjectSOList().Count){
                 bool plateContentsMatchesRecipe = true;
@@ -61,23 +82,35 @@ public class DeliveryManager : MonoBehaviour
                     }
                 }
                 if(plateContentsMatchesRecipe){
-                    
-                    successfulRecipesAmount++;
-                    waitingRecipeSOList.RemoveAt(i);
+                    SuccessfulRecipesAmount++;
+                    WaitingRecipeIndices.Remove(WaitingRecipeIndices[i]);
 
-                    OnRecipeCompleted?.Invoke(this, EventArgs.Empty);
-                    OnRecipeSuccess?.Invoke(this, EventArgs.Empty);
+                    RPC_RecipeSuccess();
                     return;
                 }
             }
         }
+        RPC_RecipeFailed();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_RecipeSuccess(){
+        OnRecipeSuccess?.Invoke(this, EventArgs.Empty);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_RecipeFailed(){
         OnRecipeFailed?.Invoke(this, EventArgs.Empty);
     }
 
     public List<RecipeSO> GetWaitingRecipeSOList(){
-        return waitingRecipeSOList;
+        List<RecipeSO> list = new List<RecipeSO>();
+        foreach(int index in WaitingRecipeIndices){
+            list.Add(recipeListSO.recipeSOList[index]);
+        }
+        return list;
     }
     public int GetSuccessfulRecipesAmount(){
-        return successfulRecipesAmount;
+        return SuccessfulRecipesAmount;
     }
 }

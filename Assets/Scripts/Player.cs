@@ -1,11 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
 using System;
 
-public class Player : MonoBehaviour, IKitchenObjectParent
+public class Player : NetworkBehaviour, IKitchenObjectParent
 {
-    public static Player Instance{ get; private set;}
+    public static Player LocalInstance { get; private set; }
+
+    public static event EventHandler OnAnyPlayerSpawned;
+    public static event EventHandler OnAnyPickedSomething;
 
     public event EventHandler OnPickedSomething;
     public event EventHandler<OnSelectedCounterChangedEventArgs> OnSelectedCounterChanged;
@@ -14,53 +16,57 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     }
 
     [SerializeField] private float moveSpeed = 7f;
-    [SerializeField] private GameInput gameInput;
     [SerializeField] private LayerMask countersLayerMask;
     [SerializeField] private Transform kitchenObjectHoldPoint;
 
-    private bool isWalking;
+    [Networked] public NetworkBool IsWalking { get; set; }
+    [Networked] private NetworkButtons PreviousButtons { get; set; }
+
     private Vector3 lastInteractDir;
     private BaseCounter selectedCounter;
     private KitchenObject kitchenObject;
 
-    private void Awake()
-    {
-        if(Instance != null){
-            Debug.LogError("There is more than one Player instance");
-        }
-        Instance = this;
-    }
-    private void Start() {
-        gameInput.OnInteractAction += GameInput_OnInteractAction;
-        gameInput.OnInteractAlternateAction += GameInput_OnInteractActernateAction;
-        
-    }
-    private void GameInput_OnInteractActernateAction(object sender, System.EventArgs e){
-        if(!KitchenGameManager.Instance.IsGamePlaying()) return;
-        
-        if(selectedCounter != null){
-            selectedCounter.InteractAlternate(this);
-        }
-    }
-    private void GameInput_OnInteractAction(object sender, System.EventArgs e){
-        if(!KitchenGameManager.Instance.IsGamePlaying()) return;
-
-        if(selectedCounter != null){
-            selectedCounter.Interact(this);
-        }
-    }
-    private void Update() {
-        HandleMovement();
-        HandleInteractions();
+    public static void ResetStaticData(){
+        OnAnyPlayerSpawned = null;
+        OnAnyPickedSomething = null;
     }
 
-    public bool IsWalking(){
-        return isWalking;
+    public override void Spawned(){
+        if(HasInputAuthority){
+            LocalInstance = this;
+            OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
+        }
     }
-    private void HandleInteractions(){
-        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
 
-        Vector3 moveDir = new Vector3(inputVector.x,0f,inputVector.y);
+    public override void FixedUpdateNetwork(){
+        if(KitchenGameManager.Instance.IsPaused) return;
+
+        if(!KitchenGameManager.Instance.IsGamePlaying() &&
+           !KitchenGameManager.Instance.IsWaitingToStart()){
+            return;
+        }
+
+        if(GetInput(out PlayerNetworkInput input)){
+            // Handle game start
+            if(KitchenGameManager.Instance.IsWaitingToStart()){
+                var pressed = input.buttons.GetPressed(PreviousButtons);
+                if(pressed.IsSet(InputButton.Interact)){
+                    KitchenGameManager.Instance.TryStartGame();
+                }
+                PreviousButtons = input.buttons;
+                return;
+            }
+
+            HandleMovement(input);
+            HandleInteractions(input);
+
+            PreviousButtons = input.buttons;
+        }
+    }
+
+    private void HandleInteractions(PlayerNetworkInput input){
+        Vector2 inputVector = input.moveDirection;
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
         if(moveDir != Vector3.zero){
             lastInteractDir = moveDir;
@@ -77,13 +83,26 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         }else{
             SetSelectedCounter(null);
         }
+
+        var pressed = input.buttons.GetPressed(PreviousButtons);
+
+        if(pressed.IsSet(InputButton.Interact)){
+            if(selectedCounter != null){
+                selectedCounter.Interact(this);
+            }
+        }
+        if(pressed.IsSet(InputButton.InteractAlternate)){
+            if(selectedCounter != null){
+                selectedCounter.InteractAlternate(this);
+            }
+        }
     }
-    private void HandleMovement(){
-        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
 
-        Vector3 moveDir = new Vector3(inputVector.x,0f,inputVector.y);
+    private void HandleMovement(PlayerNetworkInput input){
+        Vector2 inputVector = input.moveDirection;
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
-        float moveDistance = moveSpeed * Time.deltaTime;
+        float moveDistance = moveSpeed * Runner.DeltaTime;
         float playerRadius = .6f;
         float playerHeight = 2f;
         bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
@@ -96,7 +115,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
             }else{
                 Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
                 canMove = (moveDir.z < -.5f || moveDir.z > .5f) && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
-                
+
                 if(canMove){
                     moveDir = moveDirZ;
                 }
@@ -106,16 +125,18 @@ public class Player : MonoBehaviour, IKitchenObjectParent
             transform.position += moveDir * moveDistance;
         }
 
-        isWalking = moveDir != Vector3.zero;
+        IsWalking = moveDir != Vector3.zero;
         float rotateSpeed = 10f;
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
+        transform.forward = Vector3.Slerp(transform.forward, moveDir, Runner.DeltaTime * rotateSpeed);
     }
+
     private void SetSelectedCounter(BaseCounter selectedCounter){
         this.selectedCounter = selectedCounter;
         OnSelectedCounterChanged?.Invoke(this, new OnSelectedCounterChangedEventArgs {
             selectedCounter = selectedCounter
         });
     }
+
     public Transform GetKitchenObjectFollowTransform(){
         return kitchenObjectHoldPoint;
     }
@@ -124,6 +145,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
 
         if(kitchenObject != null){
             OnPickedSomething?.Invoke(this, EventArgs.Empty);
+            OnAnyPickedSomething?.Invoke(this, EventArgs.Empty);
         }
     }
     public KitchenObject GetKitchenObject(){
@@ -134,5 +156,8 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     }
     public bool HasKitchenObject(){
         return kitchenObject != null;
+    }
+    public NetworkObject GetNetworkObject(){
+        return Object;
     }
 }

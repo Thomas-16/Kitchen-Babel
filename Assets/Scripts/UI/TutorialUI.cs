@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
@@ -19,11 +17,16 @@ public class TutorialUI : MonoBehaviour
 
     private void Start() {
         GameInput.Instance.OnBindingRebind += GameInput_OnBindingRebind;
-        KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
+        KitchenGameManager.OnInstanceReady += KitchenGameManager_OnInstanceReady;
+        if(KitchenGameManager.Instance != null){
+            KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
+        }
 
         UpdateVisual();
-
         Show();
+    }
+    private void KitchenGameManager_OnInstanceReady(object sender, EventArgs e){
+        KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
     }
     private void KitchenGameManager_OnStateChanged(object sender, EventArgs e){
         if(KitchenGameManager.Instance.IsCountdownToStartActive()) Hide();

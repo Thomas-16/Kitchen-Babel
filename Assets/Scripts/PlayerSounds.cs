@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerSounds : MonoBehaviour
@@ -17,7 +15,7 @@ public class PlayerSounds : MonoBehaviour
         if(footstepTimer < 0f){
             footstepTimer = footstepTimerMax;
 
-            if(player.IsWalking()){
+            if(player.IsWalking){
                 float volume = 1f;
                 SoundManager.Instance.PlayFootstepSound(player.transform.position, volume);
             }

@@ -95,7 +95,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8529292057493577800, guid: c4e141bc61e807b4b832b850d92f5fd7,
         type: 3}
-      propertyPath: m_Materials.Array.data[0]
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 1a0afd856a35421469b28b916116fd9c, type: 2}
     m_RemovedComponents: []
@@ -227,6 +227,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 176435585058046234, guid: 278a55dbe0c85be44a21c4006c699a6c,
+        type: 3}
+      propertyPath: SortKey
+      value: 2073314669
+      objectReference: {fileID: 0}
+    - target: {fileID: 176435585058046234, guid: 278a55dbe0c85be44a21c4006c699a6c,
+        type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 176435585058046234, guid: 278a55dbe0c85be44a21c4006c699a6c,
+        type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 4183972150263688234}
     - target: {fileID: 2209836581881336197, guid: 278a55dbe0c85be44a21c4006c699a6c,
         type: 3}
       propertyPath: m_Name

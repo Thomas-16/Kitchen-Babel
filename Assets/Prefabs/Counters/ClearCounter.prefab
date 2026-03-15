@@ -87,6 +87,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 176435585058046234, guid: 278a55dbe0c85be44a21c4006c699a6c,
+        type: 3}
+      propertyPath: Flags
+      value: 262145
+      objectReference: {fileID: 0}
+    - target: {fileID: 176435585058046234, guid: 278a55dbe0c85be44a21c4006c699a6c,
+        type: 3}
+      propertyPath: SortKey
+      value: 2005584236
+      objectReference: {fileID: 0}
+    - target: {fileID: 176435585058046234, guid: 278a55dbe0c85be44a21c4006c699a6c,
+        type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 176435585058046234, guid: 278a55dbe0c85be44a21c4006c699a6c,
+        type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1284334123664758090}
     - target: {fileID: 2209836581881336197, guid: 278a55dbe0c85be44a21c4006c699a6c,
         type: 3}
       propertyPath: m_Name
@@ -194,8 +214,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58e9c8b9706aecd4d821065c5238342d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  kitchenObjectSO: {fileID: 11400000, guid: 01ba70772bc57194e937b02e8698fcc7, type: 2}
   counterTopPoint: {fileID: 6128385851416242894}
+  kitchenObjectSO: {fileID: 11400000, guid: 01ba70772bc57194e937b02e8698fcc7, type: 2}
 --- !u!1001 &8833513266946679307
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -206,7 +226,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3984833892277163771, guid: 0004cb1e11ad014419b943c7da960724,
         type: 3}
-      propertyPath: m_Materials.Array.data[0]
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 1a0afd856a35421469b28b916116fd9c, type: 2}
     - target: {fileID: 4589716710238282922, guid: 0004cb1e11ad014419b943c7da960724,

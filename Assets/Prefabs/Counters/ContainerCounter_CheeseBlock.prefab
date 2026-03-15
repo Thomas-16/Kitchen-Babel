@@ -68,6 +68,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: ContainerCounter_CheeseBlock
       objectReference: {fileID: 0}
+    - target: {fileID: 6601272376335930642, guid: eb028bddb20f533439dd417b71c2d150,
+        type: 3}
+      propertyPath: SortKey
+      value: 164237439
+      objectReference: {fileID: 0}
     - target: {fileID: 7586922572932489967, guid: eb028bddb20f533439dd417b71c2d150,
         type: 3}
       propertyPath: kitchenObjectSO

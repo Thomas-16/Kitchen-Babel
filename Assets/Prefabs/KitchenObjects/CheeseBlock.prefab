@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3839730374885110452}
   - component: {fileID: -6150835488280685917}
+  - component: {fileID: 2733205879688973703}
   m_Layer: 0
   m_Name: CheeseBlock
   m_TagString: Untagged
@@ -24,6 +25,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 478782863308204376}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1.83, y: 0, z: 0.76}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -31,7 +33,6 @@ Transform:
   m_Children:
   - {fileID: 6480217396957965915}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &-6150835488280685917
 MonoBehaviour:
@@ -46,6 +47,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   kitchenObjectSO: {fileID: 11400000, guid: 6031a011a39bd8241b502dde489dfedb, type: 2}
+  _KitchenObjectParentId:
+    Object:
+      Raw: 0
+    Behaviour: 0
+  _KitchenObjectSOIndex: 0
+--- !u!114 &2733205879688973703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 478782863308204376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3675033273
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: -6150835488280685917}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1001 &7855496458093787355
 PrefabInstance:
   m_ObjectHideFlags: 0

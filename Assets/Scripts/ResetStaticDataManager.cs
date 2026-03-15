@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ResetStaticDataManager : MonoBehaviour
@@ -8,5 +6,8 @@ public class ResetStaticDataManager : MonoBehaviour
         CuttingCounter.ResetStaticData();
         BaseCounter.ResetStaticData();
         TrashCounter.ResetStaticData();
+        Player.ResetStaticData();
+        KitchenGameManager.ResetStaticData();
+        DeliveryManager.ResetStaticData();
     }
 }

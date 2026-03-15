@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -56,11 +54,17 @@ public class OptionsUI : MonoBehaviour
         pauseButton.onClick.AddListener(() => { RebindBinding(GameInput.Binding.Pause); });
     }
     private void Start() {
-        KitchenGameManager.Instance.OnGameUnpaused += KitchenGameManager_GameUnpaused;
+        KitchenGameManager.OnInstanceReady += KitchenGameManager_OnInstanceReady;
+        if(KitchenGameManager.Instance != null){
+            KitchenGameManager.Instance.OnGameUnpaused += KitchenGameManager_GameUnpaused;
+        }
         UpdateVisual();
 
         HidePressToRebindKey();
         Hide();
+    }
+    private void KitchenGameManager_OnInstanceReady(object sender, EventArgs e){
+        KitchenGameManager.Instance.OnGameUnpaused += KitchenGameManager_GameUnpaused;
     }
     private void KitchenGameManager_GameUnpaused(object sender, EventArgs e){
         Hide();

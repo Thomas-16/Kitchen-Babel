@@ -1,7 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class GameInput : MonoBehaviour
@@ -26,12 +24,14 @@ public class GameInput : MonoBehaviour
     }
 
     private PlayerInputActions playerInputActions;
+    private bool interactPressed;
+    private bool interactAlternatePressed;
 
     private void Awake() {
         Instance = this;
 
         playerInputActions = new PlayerInputActions();
-        
+
         if(PlayerPrefs.HasKey(PLAYERS_PREFS_BINDINGS)){
             playerInputActions.LoadBindingOverridesFromJson(PlayerPrefs.GetString(PLAYERS_PREFS_BINDINGS));
         }
@@ -54,14 +54,28 @@ public class GameInput : MonoBehaviour
     }
     private void InteractAlternate_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj){
         OnInteractAlternateAction?.Invoke(this, EventArgs.Empty);
+        interactAlternatePressed = true;
     }
     private void Interact_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj){
         OnInteractAction?.Invoke(this, EventArgs.Empty);
+        interactPressed = true;
+    }
+
+    public bool GetInteractPressed(){
+        bool pressed = interactPressed;
+        interactPressed = false;
+        return pressed;
+    }
+
+    public bool GetInteractAlternatePressed(){
+        bool pressed = interactAlternatePressed;
+        interactAlternatePressed = false;
+        return pressed;
     }
 
     public Vector2 GetMovementVectorNormalized(){
         Vector2 inputVector = playerInputActions.Player.Move.ReadValue<Vector2>();
-        
+
         inputVector = inputVector.normalized;
         return inputVector;
     }
@@ -84,7 +98,7 @@ public class GameInput : MonoBehaviour
                 return playerInputActions.Player.InteractAlternate.bindings[0].ToDisplayString();
             case Binding.Pause:
                 return playerInputActions.Player.Pause.bindings[0].ToDisplayString();
-            
+
         }
     }
     public void RebindBinding(Binding binding, Action onActionRebound){
