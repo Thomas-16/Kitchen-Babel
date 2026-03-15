@@ -3,7 +3,9 @@
     "allow": [
       "Bash(find:*)",
       "Bash(wc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebSearch",
+      "WebFetch(domain:doc.photonengine.com)"
     ]
   }
 }

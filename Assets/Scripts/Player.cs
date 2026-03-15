@@ -19,10 +19,10 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     [SerializeField] private LayerMask countersLayerMask;
     [SerializeField] private Transform kitchenObjectHoldPoint;
 
+    [SerializeField] private CharacterController controller;
+
     [Networked] public NetworkBool IsWalking { get; set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
-    [Networked] private Vector3 NetworkedPosition { get; set; }
-    [Networked] private Quaternion NetworkedRotation { get; set; }
 
     private Vector3 lastInteractDir;
     private BaseCounter selectedCounter;
@@ -109,43 +109,15 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
         float moveDistance = moveSpeed * Runner.DeltaTime;
-        float playerRadius = .6f;
-        float playerHeight = 2f;
-        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
 
-        if(!canMove){
-            Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
-            canMove = (moveDir.x < -.5f || moveDir.x > .5f) && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistance);
-            if(canMove){
-                moveDir = moveDirX;
-            }else{
-                Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
-                canMove = (moveDir.z < -.5f || moveDir.z > .5f) && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
-
-                if(canMove){
-                    moveDir = moveDirZ;
-                }
-            }
-        }
-        if(canMove){
-            transform.position += moveDir * moveDistance;
+        if(moveDir != Vector3.zero){
+            controller.Move(moveDir * moveDistance);
         }
 
         IsWalking = moveDir != Vector3.zero;
         if(IsWalking){
             float rotateSpeed = 10f;
             transform.forward = Vector3.Slerp(transform.forward, moveDir, Runner.DeltaTime * rotateSpeed);
-        }
-        NetworkedPosition = transform.position;
-        NetworkedRotation = transform.rotation;
-    }
-
-    public override void Render(){
-        // Local player: position is already correct from FixedUpdateNetwork prediction
-        // Remote players: interpolate toward the latest networked state
-        if(!HasInputAuthority){
-            transform.position = Vector3.Lerp(transform.position, NetworkedPosition, Time.deltaTime * 15f);
-            transform.rotation = Quaternion.Slerp(transform.rotation, NetworkedRotation, Time.deltaTime * 15f);
         }
     }
 
