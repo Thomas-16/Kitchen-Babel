@@ -45,4 +45,5 @@ Game data is defined as ScriptableObjects in `Assets/Scriptable Objects/`:
 Uses Unity's New Input System. `PlayerInputActions` is auto-generated from the input action asset — do not edit manually. `GameInput.cs` wraps it and handles rebinding with PlayerPrefs persistence.
 
 ### Notes to Claude
-- You can always tell me to do anything in the Unity Editor since you can't access that.
+- You can always tell me to do anything in the Unity Editor like creating GameObjects/Prefabs, adding compoonents, etc.
+- You can use the Unity MCP.
