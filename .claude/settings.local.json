@@ -9,7 +9,8 @@
       "mcp__UnityMCP__manage_scene",
       "mcp__UnityMCP__find_gameobjects",
       "Bash(2)",
-      "Bash(sed 's/, guid:.*//')"
+      "Bash(sed 's/, guid:.*//')",
+      "mcp__UnityMCP__read_console"
     ]
   }
 }

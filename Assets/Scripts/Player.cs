@@ -50,18 +50,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         }
 
         if(GetInput(out PlayerNetworkInput input)){
-            // Handle game start (host only)
-            if(KitchenGameManager.Instance.IsWaitingToStart()){
-                if(Object.HasStateAuthority){
-                    var pressed = input.buttons.GetPressed(PreviousButtons);
-                    if(pressed.IsSet(InputButton.Interact)){
-                        KitchenGameManager.Instance.TryStartGame();
-                    }
-                    PreviousButtons = input.buttons;
-                }
-                return;
-            }
-
             HandleMovement(input);
             HandleCounterSelection(input);
 
