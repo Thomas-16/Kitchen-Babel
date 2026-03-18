@@ -5,7 +5,9 @@
       "Bash(wc:*)",
       "Bash(grep:*)",
       "WebSearch",
-      "WebFetch(domain:doc.photonengine.com)"
+      "WebFetch(domain:doc.photonengine.com)",
+      "mcp__UnityMCP__manage_scene",
+      "mcp__UnityMCP__find_gameobjects"
     ]
   }
 }
