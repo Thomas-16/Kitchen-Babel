@@ -39,7 +39,6 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         var go = new GameObject("NetworkRunner");
         go.transform.SetParent(transform);
-        DontDestroyOnLoad(go);
         var runner = go.AddComponent<NetworkRunner>();
         runner.AddCallbacks(this);
         runner.ProvideInput = false;
