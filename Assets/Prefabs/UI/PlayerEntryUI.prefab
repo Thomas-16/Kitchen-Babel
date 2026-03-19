@@ -1314,6 +1314,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerEntryUI
   playerNameText: {fileID: 6481730721801828596}
   kickButtonObject: {fileID: 6968939864800762289}
+  readyTextObject: {fileID: 8837148866667793354}
 --- !u!1 &4740887276407758005
 GameObject:
   m_ObjectHideFlags: 0

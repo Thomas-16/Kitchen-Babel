@@ -7,6 +7,7 @@ public class PlayerEntryUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerNameText;
     [SerializeField] private GameObject kickButtonObject;
+    [SerializeField] private GameObject readyTextObject;
 
     private PlayerRef playerRef;
 
@@ -18,6 +19,9 @@ public class PlayerEntryUI : MonoBehaviour
         bool showKick = isHost && data.Player != localPlayer;
         if (kickButtonObject != null)
             kickButtonObject.SetActive(showKick);
+
+        if (readyTextObject != null)
+            readyTextObject.SetActive(data.IsReady);
     }
 
     public void OnKickClicked()
