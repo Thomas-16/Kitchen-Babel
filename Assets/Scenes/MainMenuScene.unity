@@ -69361,6 +69361,7 @@ MonoBehaviour:
   passwordInputContainer: {fileID: 337378546}
   passwordInputField: {fileID: 337378549}
   invalidPasswordText: {fileID: 482819625}
+  layoutRoot: {fileID: 894777276}
 --- !u!1 &2049583239
 GameObject:
   m_ObjectHideFlags: 0

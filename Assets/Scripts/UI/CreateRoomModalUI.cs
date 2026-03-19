@@ -2,6 +2,7 @@ using System.Collections;
 using Michsky.UI.Heat;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CreateRoomModalUI : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class CreateRoomModalUI : MonoBehaviour
     [SerializeField] private GameObject passwordInputContainer;
     [SerializeField] private TMP_InputField passwordInputField;
     [SerializeField] private GameObject invalidPasswordText;
+    [SerializeField] private RectTransform layoutRoot;
 
     private int selectedMaxPlayers = 2;
     private bool requirePassword = false;
@@ -45,6 +47,7 @@ public class CreateRoomModalUI : MonoBehaviour
         requirePassword = value;
         if (passwordInputContainer != null) passwordInputContainer.SetActive(value);
         if (!value && passwordInputField != null) passwordInputField.text = "";
+        if (layoutRoot != null) LayoutRebuilder.ForceRebuildLayoutImmediate(layoutRoot);
     }
 
     public void OnCancelClicked()
