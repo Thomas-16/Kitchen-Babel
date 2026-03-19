@@ -18,6 +18,7 @@ public class LobbyManager : NetworkBehaviour
     {
         Instance = this;
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
+        Debug.Log($"[LobbyManager] Spawned! HasStateAuthority={HasStateAuthority}, PlayersVersion={PlayersVersion}, Players.Count={Players.Count}");
 
         if (HasStateAuthority)
         {
@@ -62,6 +63,7 @@ public class LobbyManager : NetworkBehaviour
         };
         Players.Add(playerData);
         PlayersVersion++;
+        Debug.Log($"[LobbyManager] AddPlayer: {player}, PlayersVersion now={PlayersVersion}, Count={Players.Count}");
     }
 
     public void RemovePlayer(PlayerRef player)

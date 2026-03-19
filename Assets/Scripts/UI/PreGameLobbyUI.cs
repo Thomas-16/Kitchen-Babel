@@ -18,8 +18,13 @@ public class PreGameLobbyUI : MonoBehaviour
 
     private void Update()
     {
-        if (LobbyManager.Instance == null) return;
+        if (LobbyManager.Instance == null)
+        {
+            Debug.Log("[PreGameLobbyUI] Update: LobbyManager.Instance is NULL");
+            return;
+        }
         if (LobbyManager.Instance.PlayersVersion == lastSeenVersion) return;
+        Debug.Log($"[PreGameLobbyUI] Version changed: {lastSeenVersion} -> {LobbyManager.Instance.PlayersVersion}");
         lastSeenVersion = LobbyManager.Instance.PlayersVersion;
         RefreshPlayerList();
     }
@@ -49,8 +54,10 @@ public class PreGameLobbyUI : MonoBehaviour
         bool isHost = runner != null && runner.IsServer;
         var localPlayer = runner != null ? runner.LocalPlayer : default;
 
+        Debug.Log($"[PreGameLobbyUI] RefreshPlayerList: {LobbyManager.Instance.Players.Count} players, isHost={isHost}");
         foreach (var data in LobbyManager.Instance.Players)
         {
+            Debug.Log($"[PreGameLobbyUI]   Player: {data.Player}, Name: {data.PlayerName}");
             var entry = Instantiate(playerTemplatePrefab, playerListContent);
             entry.SetActive(true);
             var entryUI = entry.GetComponent<PlayerEntryUI>();
