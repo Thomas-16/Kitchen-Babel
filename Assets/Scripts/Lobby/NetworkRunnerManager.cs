@@ -21,6 +21,28 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public List<SessionInfo> CachedSessionList { get; private set; } = new List<SessionInfo>();
     public bool IsHost => Runner != null && Runner.IsServer;
 
+    private async Task ShutdownRunner()
+    {
+        if (Runner != null)
+        {
+            Runner.RemoveCallbacks(this);
+            await Runner.Shutdown(destroyGameObject: true);
+            Runner = null;
+            await Task.Yield();
+        }
+    }
+
+    private NetworkRunner CreateRunner()
+    {
+        var go = new GameObject("NetworkRunner");
+        go.transform.SetParent(transform);
+        DontDestroyOnLoad(go);
+        var runner = go.AddComponent<NetworkRunner>();
+        runner.AddCallbacks(this);
+        runner.ProvideInput = false;
+        return runner;
+    }
+
     private void Awake()
     {
         if (Instance != null)
@@ -40,17 +62,9 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public async void JoinLobby()
     {
-        if (Runner != null)
-        {
-            await Runner.Shutdown(destroyGameObject: false);
-            Destroy(Runner);
-            Runner = null;
-            await Task.Yield();
-        }
+        await ShutdownRunner();
 
-        Runner = gameObject.AddComponent<NetworkRunner>();
-        Runner.AddCallbacks(this);
-        Runner.ProvideInput = false;
+        Runner = CreateRunner();
 
         var result = await Runner.JoinSessionLobby(SessionLobby.ClientServer);
         if (!result.Ok)
@@ -61,18 +75,9 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public async void CreateRoom(string roomName, string password, int maxPlayers)
     {
-        if (Runner != null)
-        {
-            Runner.RemoveCallbacks(this);
-            await Runner.Shutdown(destroyGameObject: false);
-            Destroy(Runner);
-            Runner = null;
-            await Task.Yield();
-        }
+        await ShutdownRunner();
 
-        Runner = gameObject.AddComponent<NetworkRunner>();
-        Runner.AddCallbacks(this);
-        Runner.ProvideInput = false;
+        Runner = CreateRunner();
 
         var sessionProps = new Dictionary<string, SessionProperty>();
         if (!string.IsNullOrEmpty(password))
@@ -111,18 +116,9 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public async void JoinRoom(string sessionName, string password)
     {
-        if (Runner != null)
-        {
-            Runner.RemoveCallbacks(this);
-            await Runner.Shutdown(destroyGameObject: false);
-            Destroy(Runner);
-            Runner = null;
-            await Task.Yield();
-        }
+        await ShutdownRunner();
 
-        Runner = gameObject.AddComponent<NetworkRunner>();
-        Runner.AddCallbacks(this);
-        Runner.ProvideInput = false;
+        Runner = CreateRunner();
 
         var sceneInfo = new NetworkSceneInfo();
         sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
@@ -148,14 +144,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public async void LeaveSession()
     {
-        if (Runner != null)
-        {
-            Runner.RemoveCallbacks(this);
-            await Runner.Shutdown(destroyGameObject: false);
-            Destroy(Runner);
-            Runner = null;
-            await Task.Yield();
-        }
+        await ShutdownRunner();
 
         OnDisconnected?.Invoke();
         JoinLobby();
