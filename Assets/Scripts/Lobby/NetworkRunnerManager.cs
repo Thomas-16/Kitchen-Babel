@@ -112,7 +112,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             Dictionary<string, SessionProperty> sessionProps = new Dictionary<string, SessionProperty>();
             if (!string.IsNullOrEmpty(password))
             {
-                sessionProps["pw"] = password.GetHashCode();
+                sessionProps["pw"] = password.ToUpperInvariant().GetHashCode();
             }
             else
             {
@@ -229,7 +229,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             if (storedHash == 0)
                 return true;
 
-            int inputHash = string.IsNullOrEmpty(password) ? 0 : password.GetHashCode();
+            int inputHash = string.IsNullOrEmpty(password) ? 0 : password.ToUpperInvariant().GetHashCode();
             return storedHash == inputHash;
         }
         return true;
