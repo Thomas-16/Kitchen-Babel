@@ -91,6 +91,11 @@ public class RoomBrowserUI : MonoBehaviour
         // Room browser stays open, notification already shown by TryJoinRoom
     }
 
+    public void OnRefreshClicked()
+    {
+        NetworkRunnerManager.Instance.JoinLobby();
+    }
+
     private void ShowIncorrectPWNotification()
     {
         if (incorrectPWNotification != null)
