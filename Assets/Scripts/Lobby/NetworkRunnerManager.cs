@@ -37,9 +37,9 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private NetworkRunner CreateRunner()
     {
-        var go = new GameObject("NetworkRunner");
+        GameObject go = new GameObject("NetworkRunner");
         go.transform.SetParent(transform);
-        var runner = go.AddComponent<NetworkRunner>();
+        NetworkRunner runner = go.AddComponent<NetworkRunner>();
         runner.AddCallbacks(this);
         runner.ProvideInput = false;
         return runner;
@@ -78,7 +78,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             Runner = CreateRunner();
 
             Debug.Log("[NetworkRunnerManager] Joining session lobby...");
-            var result = await Runner.JoinSessionLobby(SessionLobby.ClientServer);
+            StartGameResult result = await Runner.JoinSessionLobby(SessionLobby.ClientServer);
             if (result.Ok)
             {
                 Debug.Log("[NetworkRunnerManager] Successfully joined lobby.");
@@ -109,7 +109,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
             Runner = CreateRunner();
 
-            var sessionProps = new Dictionary<string, SessionProperty>();
+            Dictionary<string, SessionProperty> sessionProps = new Dictionary<string, SessionProperty>();
             if (!string.IsNullOrEmpty(password))
             {
                 sessionProps["pw"] = password.GetHashCode();
@@ -119,10 +119,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
                 sessionProps["pw"] = 0;
             }
 
-            var sceneInfo = new NetworkSceneInfo();
+            NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
 
-            var result = await Runner.StartGame(new StartGameArgs
+            StartGameResult result = await Runner.StartGame(new StartGameArgs
             {
                 GameMode = GameMode.Host,
                 SessionName = roomName,
@@ -161,10 +161,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
             Runner = CreateRunner();
 
-            var sceneInfo = new NetworkSceneInfo();
+            NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
 
-            var result = await Runner.StartGame(new StartGameArgs
+            StartGameResult result = await Runner.StartGame(new StartGameArgs
             {
                 GameMode = GameMode.Client,
                 SessionName = sessionName,
@@ -209,7 +209,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (Runner == null || !Runner.IsServer) return;
 
-        var sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/GameScene.unity"));
+        SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/GameScene.unity"));
         Runner.LoadScene(sceneRef);
     }
 
@@ -223,7 +223,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public bool ValidatePassword(SessionInfo session, string password)
     {
-        if (session.Properties.TryGetValue("pw", out var pwProp))
+        if (session.Properties.TryGetValue("pw", out SessionProperty pwProp))
         {
             int storedHash = (int)pwProp;
             if (storedHash == 0)
@@ -237,7 +237,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public bool SessionHasPassword(SessionInfo session)
     {
-        if (session.Properties.TryGetValue("pw", out var pwProp))
+        if (session.Properties.TryGetValue("pw", out SessionProperty pwProp))
         {
             return (int)pwProp != 0;
         }

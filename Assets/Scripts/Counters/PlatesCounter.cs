@@ -23,7 +23,7 @@ public class PlatesCounter : BaseCounter
     }
 
     public override void Render(){
-        foreach(var propertyName in changeDetector.DetectChanges(this)){
+        foreach(string propertyName in changeDetector.DetectChanges(this)){
             switch(propertyName){
                 case nameof(PlatesSpawnAmount):
                     if(PlatesSpawnAmount > lastKnownPlateCount){

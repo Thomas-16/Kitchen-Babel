@@ -53,7 +53,7 @@ public class KitchenGameManager : NetworkBehaviour
     }
 
     public override void Render(){
-        foreach(var propertyName in changeDetector.DetectChanges(this)){
+        foreach(string propertyName in changeDetector.DetectChanges(this)){
             switch(propertyName){
                 case nameof(NetworkedState):
                     OnStateChanged?.Invoke(this, EventArgs.Empty);

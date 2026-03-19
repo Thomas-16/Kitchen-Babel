@@ -55,7 +55,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
             // Only host executes interactions (spawn/modify networked objects)
             if(Object.HasStateAuthority){
-                var pressed = input.buttons.GetPressed(PreviousButtons);
+                NetworkButtons pressed = input.buttons.GetPressed(PreviousButtons);
                 if(pressed.IsSet(InputButton.Interact)){
                     if(selectedCounter != null){
                         selectedCounter.Interact(this);

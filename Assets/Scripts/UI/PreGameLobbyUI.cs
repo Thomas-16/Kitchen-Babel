@@ -1,3 +1,4 @@
+using Fusion;
 using Michsky.UI.Heat;
 using UnityEngine;
 
@@ -50,17 +51,17 @@ public class PreGameLobbyUI : MonoBehaviour
 
         if (LobbyManager.Instance == null) return;
 
-        var runner = NetworkRunnerManager.Instance.Runner;
+        NetworkRunner runner = NetworkRunnerManager.Instance.Runner;
         bool isHost = runner != null && runner.IsServer;
-        var localPlayer = runner != null ? runner.LocalPlayer : default;
+        PlayerRef localPlayer = runner != null ? runner.LocalPlayer : default;
 
         Debug.Log($"[PreGameLobbyUI] RefreshPlayerList: {LobbyManager.Instance.Players.Count} players, isHost={isHost}");
-        foreach (var data in LobbyManager.Instance.Players)
+        foreach (LobbyPlayerData data in LobbyManager.Instance.Players)
         {
             Debug.Log($"[PreGameLobbyUI]   Player: {data.Player}, Name: {data.PlayerName}");
-            var entry = Instantiate(playerTemplatePrefab, playerListContent);
+            GameObject entry = Instantiate(playerTemplatePrefab, playerListContent);
             entry.SetActive(true);
-            var entryUI = entry.GetComponent<PlayerEntryUI>();
+            PlayerEntryUI entryUI = entry.GetComponent<PlayerEntryUI>();
             entryUI.Setup(data, isHost, localPlayer);
         }
 
@@ -71,7 +72,7 @@ public class PreGameLobbyUI : MonoBehaviour
     {
         if (startButtonObject == null) return;
 
-        var runner = NetworkRunnerManager.Instance.Runner;
+        NetworkRunner runner = NetworkRunnerManager.Instance.Runner;
         bool isHost = runner != null && runner.IsServer;
         bool allReady = LobbyManager.Instance != null && LobbyManager.Instance.AreAllPlayersReady();
 
@@ -82,7 +83,7 @@ public class PreGameLobbyUI : MonoBehaviour
     {
         if (LobbyManager.Instance == null) return;
 
-        var runner = NetworkRunnerManager.Instance.Runner;
+        NetworkRunner runner = NetworkRunnerManager.Instance.Runner;
         if (runner != null)
         {
             LobbyManager.Instance.RPC_ToggleReady(runner.LocalPlayer);

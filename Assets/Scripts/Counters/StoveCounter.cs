@@ -33,7 +33,7 @@ public class StoveCounter : BaseCounter, IHasProgress
     }
 
     public override void Render(){
-        foreach(var propertyName in changeDetector.DetectChanges(this)){
+        foreach(string propertyName in changeDetector.DetectChanges(this)){
             switch(propertyName){
                 case nameof(NetworkedState):
                     State newState = (State)NetworkedState;

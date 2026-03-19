@@ -52,14 +52,14 @@ public class RoomBrowserUI : MonoBehaviour
 
         string filter = searchInput != null ? searchInput.text.ToLower() : "";
 
-        foreach (var session in NetworkRunnerManager.Instance.CachedSessionList)
+        foreach (SessionInfo session in NetworkRunnerManager.Instance.CachedSessionList)
         {
             if (!string.IsNullOrEmpty(filter) && !session.Name.ToLower().Contains(filter))
                 continue;
 
-            var entry = Instantiate(roomTemplatePrefab, roomListContent);
+            GameObject entry = Instantiate(roomTemplatePrefab, roomListContent);
             entry.SetActive(true);
-            var entryUI = entry.GetComponent<RoomEntryUI>();
+            RoomEntryUI entryUI = entry.GetComponent<RoomEntryUI>();
             entryUI.Setup(session, this);
         }
     }

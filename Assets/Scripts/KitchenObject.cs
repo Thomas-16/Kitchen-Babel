@@ -26,7 +26,7 @@ public class KitchenObject : NetworkBehaviour
     }
 
     public override void Render(){
-        foreach(var propertyName in changeDetector.DetectChanges(this)){
+        foreach(string propertyName in changeDetector.DetectChanges(this)){
             switch(propertyName){
                 case nameof(KitchenObjectParentId):
                     ApplyParentVisual();
@@ -71,7 +71,7 @@ public class KitchenObject : NetworkBehaviour
         // Set networked parent ID for syncing
         NetworkBehaviour parentNetworkBehaviour = kitchenObjectParent.GetNetworkObject().GetComponent<NetworkBehaviour>();
         // Try to get the specific IKitchenObjectParent NetworkBehaviour
-        foreach(var nb in kitchenObjectParent.GetNetworkObject().GetComponentsInChildren<NetworkBehaviour>()){
+        foreach(NetworkBehaviour nb in kitchenObjectParent.GetNetworkObject().GetComponentsInChildren<NetworkBehaviour>()){
             if(nb is IKitchenObjectParent){
                 parentNetworkBehaviour = nb;
                 break;

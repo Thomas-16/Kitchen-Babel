@@ -25,7 +25,7 @@ public class CuttingCounter : BaseCounter, IHasProgress
     }
 
     public override void Render(){
-        foreach(var propertyName in changeDetector.DetectChanges(this)){
+        foreach(string propertyName in changeDetector.DetectChanges(this)){
             switch(propertyName){
                 case nameof(CuttingProgress):
                     OnCuttingProgressChanged();

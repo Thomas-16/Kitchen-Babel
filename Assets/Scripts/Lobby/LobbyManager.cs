@@ -35,7 +35,7 @@ public class LobbyManager : NetworkBehaviour
 
     public override void Render()
     {
-        foreach (var propertyName in changeDetector.DetectChanges(this))
+        foreach (string propertyName in changeDetector.DetectChanges(this))
         {
             if (propertyName == nameof(PlayersVersion))
             {
@@ -49,13 +49,13 @@ public class LobbyManager : NetworkBehaviour
         if (!HasStateAuthority) return;
 
         // Check if player already exists
-        foreach (var data in Players)
+        foreach (LobbyPlayerData data in Players)
         {
             if (data.Player == player) return;
         }
 
         playerJoinCounter++;
-        var playerData = new LobbyPlayerData
+        LobbyPlayerData playerData = new LobbyPlayerData
         {
             Player = player,
             PlayerName = $"Player {playerJoinCounter}",
@@ -88,7 +88,7 @@ public class LobbyManager : NetworkBehaviour
         {
             if (Players.Get(i).Player == player)
             {
-                var data = Players.Get(i);
+                LobbyPlayerData data = Players.Get(i);
                 data.PlayerName = name;
                 Players.Set(i, data);
                 PlayersVersion++;
@@ -104,7 +104,7 @@ public class LobbyManager : NetworkBehaviour
         {
             if (Players.Get(i).Player == player)
             {
-                var data = Players.Get(i);
+                LobbyPlayerData data = Players.Get(i);
                 data.IsReady = !data.IsReady;
                 Players.Set(i, data);
                 PlayersVersion++;
@@ -117,7 +117,7 @@ public class LobbyManager : NetworkBehaviour
     {
         if (Players.Count == 0) return false;
 
-        foreach (var data in Players)
+        foreach (LobbyPlayerData data in Players)
         {
             if (!data.IsReady) return false;
         }
