@@ -11,12 +11,13 @@ public class LobbyManager : NetworkBehaviour
 
     public event Action OnPlayersChanged;
 
-    private int lastRenderedVersion = -1;
+    private ChangeDetector changeDetector;
     private int playerJoinCounter;
 
     public override void Spawned()
     {
         Instance = this;
+        changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
 
         if (HasStateAuthority)
         {
@@ -33,10 +34,12 @@ public class LobbyManager : NetworkBehaviour
 
     public override void Render()
     {
-        if (PlayersVersion != lastRenderedVersion)
+        foreach (var propertyName in changeDetector.DetectChanges(this))
         {
-            lastRenderedVersion = PlayersVersion;
-            OnPlayersChanged?.Invoke();
+            if (propertyName == nameof(PlayersVersion))
+            {
+                OnPlayersChanged?.Invoke();
+            }
         }
     }
 
