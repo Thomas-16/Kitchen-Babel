@@ -29,6 +29,7 @@ public class RoomEntryUI : MonoBehaviour
 
     public void OnJoinClicked()
     {
+        if (NetworkRunnerManager.Instance.IsBusy) return;
         if (!NetworkRunnerManager.Instance.SessionHasPassword(session))
         {
             roomBrowserUI.TryJoinRoom(session, "");
@@ -43,6 +44,7 @@ public class RoomEntryUI : MonoBehaviour
 
     public void OnConfirmClicked()
     {
+        if (NetworkRunnerManager.Instance.IsBusy) return;
         string password = passwordInputField != null ? passwordInputField.text : "";
         roomBrowserUI.TryJoinRoom(session, password);
     }

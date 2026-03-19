@@ -66,6 +66,7 @@ public class RoomBrowserUI : MonoBehaviour
 
     public void TryJoinRoom(SessionInfo session, string password)
     {
+        if (NetworkRunnerManager.Instance.IsBusy) return;
         if (!NetworkRunnerManager.Instance.ValidatePassword(session, password))
         {
             ShowIncorrectPWNotification();
@@ -77,6 +78,7 @@ public class RoomBrowserUI : MonoBehaviour
 
     public void OnCreateRoomClicked()
     {
+        if (NetworkRunnerManager.Instance.IsBusy) return;
         NetworkRunnerManager.Instance.CreateRoom("Player's Room", "", 4);
     }
 
@@ -93,6 +95,7 @@ public class RoomBrowserUI : MonoBehaviour
 
     public void OnRefreshClicked()
     {
+        if (NetworkRunnerManager.Instance.IsBusy) return;
         NetworkRunnerManager.Instance.JoinLobby();
     }
 

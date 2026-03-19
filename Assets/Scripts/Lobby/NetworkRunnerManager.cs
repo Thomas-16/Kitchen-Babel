@@ -20,9 +20,9 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public NetworkRunner Runner { get; private set; }
     public List<SessionInfo> CachedSessionList { get; private set; } = new List<SessionInfo>();
     public bool IsHost => Runner != null && Runner.IsServer;
+    public bool IsBusy { get; private set; }
 
     private bool pendingLobbyManagerSpawn;
-    private bool isJoiningLobby;
 
     private async Task ShutdownRunner()
     {
@@ -64,13 +64,13 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public async void JoinLobby()
     {
-        if (isJoiningLobby)
+        if (IsBusy)
         {
-            Debug.LogWarning("[NetworkRunnerManager] JoinLobby already in progress, skipping.");
+            Debug.LogWarning("[NetworkRunnerManager] JoinLobby skipped — busy.");
             return;
         }
 
-        isJoiningLobby = true;
+        IsBusy = true;
         try
         {
             await ShutdownRunner();
@@ -94,84 +94,114 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         }
         finally
         {
-            isJoiningLobby = false;
+            IsBusy = false;
         }
     }
 
     public async void CreateRoom(string roomName, string password, int maxPlayers)
     {
-        await ShutdownRunner();
-
-        Runner = CreateRunner();
-
-        var sessionProps = new Dictionary<string, SessionProperty>();
-        if (!string.IsNullOrEmpty(password))
+        if (IsBusy) return;
+        IsBusy = true;
+        bool shouldRejoinLobby = false;
+        try
         {
-            sessionProps["pw"] = password.GetHashCode();
+            await ShutdownRunner();
+
+            Runner = CreateRunner();
+
+            var sessionProps = new Dictionary<string, SessionProperty>();
+            if (!string.IsNullOrEmpty(password))
+            {
+                sessionProps["pw"] = password.GetHashCode();
+            }
+            else
+            {
+                sessionProps["pw"] = 0;
+            }
+
+            var sceneInfo = new NetworkSceneInfo();
+            sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
+
+            var result = await Runner.StartGame(new StartGameArgs
+            {
+                GameMode = GameMode.Host,
+                SessionName = roomName,
+                PlayerCount = maxPlayers,
+                SessionProperties = sessionProps,
+                Scene = sceneInfo,
+            });
+
+            if (result.Ok)
+            {
+                pendingLobbyManagerSpawn = true;
+                OnJoinedSession?.Invoke();
+            }
+            else
+            {
+                Debug.LogError($"Failed to create room: {result.ShutdownReason}");
+                OnJoinFailed?.Invoke("Failed to create room.");
+                shouldRejoinLobby = true;
+            }
         }
-        else
+        finally
         {
-            sessionProps["pw"] = 0;
+            IsBusy = false;
         }
-
-        var sceneInfo = new NetworkSceneInfo();
-        sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
-
-        var result = await Runner.StartGame(new StartGameArgs
-        {
-            GameMode = GameMode.Host,
-            SessionName = roomName,
-            PlayerCount = maxPlayers,
-            SessionProperties = sessionProps,
-            Scene = sceneInfo,
-        });
-
-        if (result.Ok)
-        {
-            pendingLobbyManagerSpawn = true;
-            OnJoinedSession?.Invoke();
-        }
-        else
-        {
-            Debug.LogError($"Failed to create room: {result.ShutdownReason}");
-            OnJoinFailed?.Invoke("Failed to create room.");
-            JoinLobby();
-        }
+        if (shouldRejoinLobby) JoinLobby();
     }
 
     public async void JoinRoom(string sessionName, string password)
     {
-        await ShutdownRunner();
-
-        Runner = CreateRunner();
-
-        var sceneInfo = new NetworkSceneInfo();
-        sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
-
-        var result = await Runner.StartGame(new StartGameArgs
+        if (IsBusy) return;
+        IsBusy = true;
+        bool shouldRejoinLobby = false;
+        try
         {
-            GameMode = GameMode.Client,
-            SessionName = sessionName,
-            Scene = sceneInfo,
-        });
+            await ShutdownRunner();
 
-        if (result.Ok)
-        {
-            OnJoinedSession?.Invoke();
+            Runner = CreateRunner();
+
+            var sceneInfo = new NetworkSceneInfo();
+            sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
+
+            var result = await Runner.StartGame(new StartGameArgs
+            {
+                GameMode = GameMode.Client,
+                SessionName = sessionName,
+                Scene = sceneInfo,
+            });
+
+            if (result.Ok)
+            {
+                OnJoinedSession?.Invoke();
+            }
+            else
+            {
+                Debug.LogError($"Failed to join room: {result.ShutdownReason}");
+                OnJoinFailed?.Invoke("Failed to join room.");
+                shouldRejoinLobby = true;
+            }
         }
-        else
+        finally
         {
-            Debug.LogError($"Failed to join room: {result.ShutdownReason}");
-            OnJoinFailed?.Invoke("Failed to join room.");
-            JoinLobby();
+            IsBusy = false;
         }
+        if (shouldRejoinLobby) JoinLobby();
     }
 
     public async void LeaveSession()
     {
-        await ShutdownRunner();
-
-        OnDisconnected?.Invoke();
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            await ShutdownRunner();
+            OnDisconnected?.Invoke();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
         JoinLobby();
     }
 

@@ -91,11 +91,13 @@ public class PreGameLobbyUI : MonoBehaviour
 
     public void OnLeaveClicked()
     {
+        if (NetworkRunnerManager.Instance.IsBusy) return;
         NetworkRunnerManager.Instance.LeaveSession();
     }
 
     public void OnStartClicked()
     {
+        if (NetworkRunnerManager.Instance.IsBusy) return;
         NetworkRunnerManager.Instance.StartGame();
     }
 }
