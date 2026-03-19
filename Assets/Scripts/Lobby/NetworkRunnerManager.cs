@@ -194,6 +194,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     // INetworkRunnerCallbacks
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
     {
+        Debug.Log($"[NetworkRunnerManager] OnSessionListUpdated: {sessionList.Count} sessions");
         CachedSessionList = sessionList;
         SessionListUpdated?.Invoke(sessionList);
     }

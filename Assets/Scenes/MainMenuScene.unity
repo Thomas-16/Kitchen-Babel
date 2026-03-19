@@ -35888,7 +35888,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 9148257209075532069}
         m_TargetAssemblyTypeName: RoomBrowserUI, Assembly-CSharp
-        m_MethodName: OnRefreshClicked
+        m_MethodName: RefreshRoomList
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
