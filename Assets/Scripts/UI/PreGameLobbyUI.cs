@@ -9,46 +9,25 @@ public class PreGameLobbyUI : MonoBehaviour
     [SerializeField] private ModalWindowManager preGameLobbyModal;
     [SerializeField] private ModalWindowManager roomBrowserModal;
 
+    private int lastSeenVersion = -1;
+
     private void Start()
     {
         NetworkRunnerManager.Instance.OnDisconnected += HandleDisconnected;
     }
 
-    private void OnEnable()
+    private void Update()
     {
-        if (LobbyManager.Instance != null)
-        {
-            LobbyManager.Instance.OnPlayersChanged += RefreshPlayerList;
-            RefreshPlayerList();
-        }
-        else
-        {
-            InvokeRepeating(nameof(TrySubscribeToLobbyManager), 0.1f, 0.1f);
-        }
-    }
-
-    private void OnDisable()
-    {
-        CancelInvoke(nameof(TrySubscribeToLobbyManager));
-
-        if (LobbyManager.Instance != null)
-            LobbyManager.Instance.OnPlayersChanged -= RefreshPlayerList;
+        if (LobbyManager.Instance == null) return;
+        if (LobbyManager.Instance.PlayersVersion == lastSeenVersion) return;
+        lastSeenVersion = LobbyManager.Instance.PlayersVersion;
+        RefreshPlayerList();
     }
 
     private void OnDestroy()
     {
         if (NetworkRunnerManager.Instance != null)
             NetworkRunnerManager.Instance.OnDisconnected -= HandleDisconnected;
-    }
-
-    private void TrySubscribeToLobbyManager()
-    {
-        if (LobbyManager.Instance != null)
-        {
-            CancelInvoke(nameof(TrySubscribeToLobbyManager));
-            LobbyManager.Instance.OnPlayersChanged += RefreshPlayerList;
-            RefreshPlayerList();
-        }
     }
 
     private void HandleDisconnected()
