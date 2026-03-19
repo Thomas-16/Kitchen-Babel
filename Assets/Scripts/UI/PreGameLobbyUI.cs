@@ -11,6 +11,7 @@ public class PreGameLobbyUI : MonoBehaviour
     [SerializeField] private ModalWindowManager roomBrowserModal;
 
     private int lastSeenVersion = -1;
+    private bool hasSetName = false;
 
     private void Start()
     {
@@ -24,6 +25,21 @@ public class PreGameLobbyUI : MonoBehaviour
             // Debug.Log("[PreGameLobbyUI] Update: LobbyManager.Instance is NULL");
             return;
         }
+
+        if (!hasSetName)
+        {
+            hasSetName = true;
+            string savedName = PlayerPrefs.GetString("PlayerName", "");
+            if (!string.IsNullOrWhiteSpace(savedName))
+            {
+                NetworkRunner runner = NetworkRunnerManager.Instance.Runner;
+                if (runner != null)
+                {
+                    LobbyManager.Instance.RPC_SetPlayerName(runner.LocalPlayer, savedName);
+                }
+            }
+        }
+
         if (LobbyManager.Instance.PlayersVersion == lastSeenVersion) return;
         Debug.Log($"[PreGameLobbyUI] Version changed: {lastSeenVersion} -> {LobbyManager.Instance.PlayersVersion}");
         lastSeenVersion = LobbyManager.Instance.PlayersVersion;
@@ -38,6 +54,7 @@ public class PreGameLobbyUI : MonoBehaviour
 
     private void HandleDisconnected()
     {
+        hasSetName = false;
         if (preGameLobbyModal != null) preGameLobbyModal.CloseWindow();
         if (roomBrowserModal != null) roomBrowserModal.OpenWindow();
     }
