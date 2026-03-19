@@ -1,0 +1,105 @@
+using System.Collections;
+using Michsky.UI.Heat;
+using TMPro;
+using UnityEngine;
+
+public class CreateRoomModalUI : MonoBehaviour
+{
+    [SerializeField] private ModalWindowManager createRoomModal;
+    [SerializeField] private GameObject passwordInputContainer;
+    [SerializeField] private TMP_InputField passwordInputField;
+    [SerializeField] private GameObject invalidPasswordText;
+
+    private int selectedMaxPlayers = 2;
+    private bool requirePassword = false;
+    private bool isCreating = false;
+    private Coroutine invalidPasswordCoroutine;
+
+    private const string PLAYER_NAME_KEY = "PlayerName";
+
+    private void Start()
+    {
+        NetworkRunnerManager.Instance.OnJoinedSession += HandleJoinedSession;
+        NetworkRunnerManager.Instance.OnJoinFailed += HandleJoinFailed;
+
+        ResetState();
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkRunnerManager.Instance != null)
+        {
+            NetworkRunnerManager.Instance.OnJoinedSession -= HandleJoinedSession;
+            NetworkRunnerManager.Instance.OnJoinFailed -= HandleJoinFailed;
+        }
+    }
+
+    public void OnMaxPlayersChanged(int index)
+    {
+        selectedMaxPlayers = index + 2;
+    }
+
+    public void OnRequirePasswordChanged(bool value)
+    {
+        requirePassword = value;
+        if (passwordInputContainer != null) passwordInputContainer.SetActive(value);
+        if (!value && passwordInputField != null) passwordInputField.text = "";
+    }
+
+    public void OnCancelClicked()
+    {
+        if (createRoomModal != null) createRoomModal.CloseWindow();
+        ResetState();
+    }
+
+    public void OnConfirmClicked()
+    {
+        if (isCreating) return;
+
+        if (requirePassword && string.IsNullOrWhiteSpace(passwordInputField != null ? passwordInputField.text : ""))
+        {
+            if (invalidPasswordCoroutine != null) StopCoroutine(invalidPasswordCoroutine);
+            invalidPasswordCoroutine = StartCoroutine(ShowInvalidPassword());
+            return;
+        }
+
+        isCreating = true;
+
+        string playerName = PlayerPrefs.GetString(PLAYER_NAME_KEY, "Player");
+        string roomName = playerName + "'s Room";
+        string password = requirePassword && passwordInputField != null ? passwordInputField.text : "";
+
+        NetworkRunnerManager.Instance.CreateRoom(roomName, password, selectedMaxPlayers);
+    }
+
+    private void HandleJoinedSession()
+    {
+        if (createRoomModal != null) createRoomModal.CloseWindow();
+        ResetState();
+    }
+
+    private void HandleJoinFailed(string reason)
+    {
+        isCreating = false;
+    }
+
+    private void ResetState()
+    {
+        selectedMaxPlayers = 2;
+        requirePassword = false;
+        isCreating = false;
+        if (passwordInputContainer != null) passwordInputContainer.SetActive(false);
+        if (passwordInputField != null) passwordInputField.text = "";
+        if (invalidPasswordText != null) invalidPasswordText.SetActive(false);
+    }
+
+    private IEnumerator ShowInvalidPassword()
+    {
+        if (invalidPasswordText != null)
+        {
+            invalidPasswordText.SetActive(true);
+            yield return new WaitForSeconds(2f);
+            invalidPasswordText.SetActive(false);
+        }
+    }
+}

@@ -19,7 +19,9 @@ public class RoomEntryUI : MonoBehaviour
         this.roomBrowserUI = roomBrowserUI;
 
         roomNameText.text = session.Name;
-        playerCountText.text = $"{session.PlayerCount}/{session.MaxPlayers}";
+        bool isPrivate = NetworkRunnerManager.Instance.SessionHasPassword(session);
+        string privacyLabel = isPrivate ? "Private" : "Public";
+        playerCountText.text = $"{privacyLabel} | Player Count: {session.PlayerCount}/{session.MaxPlayers}";
 
         // Start with join visible, pw + confirm hidden
         if (joinButtonObject != null) joinButtonObject.SetActive(true);

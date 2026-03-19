@@ -12,6 +12,7 @@ public class RoomBrowserUI : MonoBehaviour
     [SerializeField] private NotificationManager incorrectPWNotification;
     [SerializeField] private ModalWindowManager roomBrowserModal;
     [SerializeField] private ModalWindowManager preGameLobbyModal;
+    [SerializeField] private ModalWindowManager createRoomModal;
 
     private void Start()
     {
@@ -79,7 +80,7 @@ public class RoomBrowserUI : MonoBehaviour
     public void OnCreateRoomClicked()
     {
         if (NetworkRunnerManager.Instance.IsBusy) return;
-        NetworkRunnerManager.Instance.CreateRoom("Player's Room", "", 4);
+        if (createRoomModal != null) createRoomModal.OpenWindow();
     }
 
     private void HandleJoinedSession()
