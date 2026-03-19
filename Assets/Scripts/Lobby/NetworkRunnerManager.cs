@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
@@ -41,8 +42,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (Runner != null)
         {
-            await Runner.Shutdown();
+            await Runner.Shutdown(destroyGameObject: false);
+            Destroy(Runner);
             Runner = null;
+            await Task.Yield();
         }
 
         Runner = gameObject.AddComponent<NetworkRunner>();
@@ -61,9 +64,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         if (Runner != null)
         {
             Runner.RemoveCallbacks(this);
-            await Runner.Shutdown();
+            await Runner.Shutdown(destroyGameObject: false);
             Destroy(Runner);
             Runner = null;
+            await Task.Yield();
         }
 
         Runner = gameObject.AddComponent<NetworkRunner>();
@@ -110,9 +114,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         if (Runner != null)
         {
             Runner.RemoveCallbacks(this);
-            await Runner.Shutdown();
+            await Runner.Shutdown(destroyGameObject: false);
             Destroy(Runner);
             Runner = null;
+            await Task.Yield();
         }
 
         Runner = gameObject.AddComponent<NetworkRunner>();
@@ -146,7 +151,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         if (Runner != null)
         {
             Runner.RemoveCallbacks(this);
-            await Runner.Shutdown();
+            await Runner.Shutdown(destroyGameObject: false);
             Destroy(Runner);
             Runner = null;
         }
