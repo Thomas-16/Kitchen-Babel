@@ -21,6 +21,8 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public List<SessionInfo> CachedSessionList { get; private set; } = new List<SessionInfo>();
     public bool IsHost => Runner != null && Runner.IsServer;
 
+    private bool pendingLobbyManagerSpawn;
+
     private async Task ShutdownRunner()
     {
         if (Runner != null)
@@ -103,7 +105,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (result.Ok)
         {
-            Runner.Spawn(lobbyManagerPrefab, Vector3.zero, Quaternion.identity, Runner.LocalPlayer);
+            pendingLobbyManagerSpawn = true;
             OnJoinedSession?.Invoke();
         }
         else
@@ -214,9 +216,18 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {
-        if (runner.IsServer && KitchenGameManager.Instance != null)
+        if (runner.IsServer)
         {
-            KitchenGameManager.Instance.TryStartGame();
+            if (pendingLobbyManagerSpawn)
+            {
+                pendingLobbyManagerSpawn = false;
+                runner.Spawn(lobbyManagerPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer);
+            }
+
+            if (KitchenGameManager.Instance != null)
+            {
+                KitchenGameManager.Instance.TryStartGame();
+            }
         }
     }
 
