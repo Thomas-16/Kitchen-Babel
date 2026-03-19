@@ -22,6 +22,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public bool IsHost => Runner != null && Runner.IsServer;
 
     private bool pendingLobbyManagerSpawn;
+    private bool isJoiningLobby;
 
     private async Task ShutdownRunner()
     {
@@ -64,14 +65,37 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public async void JoinLobby()
     {
-        await ShutdownRunner();
-
-        Runner = CreateRunner();
-
-        var result = await Runner.JoinSessionLobby(SessionLobby.ClientServer);
-        if (!result.Ok)
+        if (isJoiningLobby)
         {
-            Debug.LogError($"Failed to join lobby: {result.ShutdownReason}");
+            Debug.LogWarning("[NetworkRunnerManager] JoinLobby already in progress, skipping.");
+            return;
+        }
+
+        isJoiningLobby = true;
+        try
+        {
+            await ShutdownRunner();
+
+            Runner = CreateRunner();
+
+            Debug.Log("[NetworkRunnerManager] Joining session lobby...");
+            var result = await Runner.JoinSessionLobby(SessionLobby.ClientServer);
+            if (result.Ok)
+            {
+                Debug.Log("[NetworkRunnerManager] Successfully joined lobby.");
+            }
+            else
+            {
+                Debug.LogError($"[NetworkRunnerManager] Failed to join lobby: {result.ShutdownReason}");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[NetworkRunnerManager] Exception in JoinLobby: {e}");
+        }
+        finally
+        {
+            isJoiningLobby = false;
         }
     }
 
