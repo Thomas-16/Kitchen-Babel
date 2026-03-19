@@ -154,9 +154,11 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             await Runner.Shutdown(destroyGameObject: false);
             Destroy(Runner);
             Runner = null;
+            await Task.Yield();
         }
 
-        SceneManager.LoadScene("MainMenuScene");
+        OnDisconnected?.Invoke();
+        JoinLobby();
     }
 
     public void StartGame()

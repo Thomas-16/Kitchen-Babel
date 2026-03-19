@@ -7,6 +7,7 @@ public class PreGameLobbyUI : MonoBehaviour
     [SerializeField] private GameObject playerTemplatePrefab;
     [SerializeField] private GameObject startButtonObject;
     [SerializeField] private ModalWindowManager preGameLobbyModal;
+    [SerializeField] private ModalWindowManager roomBrowserModal;
 
     private void Start()
     {
@@ -53,6 +54,7 @@ public class PreGameLobbyUI : MonoBehaviour
     private void HandleDisconnected()
     {
         if (preGameLobbyModal != null) preGameLobbyModal.CloseWindow();
+        if (roomBrowserModal != null) roomBrowserModal.OpenWindow();
     }
 
     private void RefreshPlayerList()

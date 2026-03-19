@@ -31580,6 +31580,7 @@ MonoBehaviour:
     type: 3}
   startButtonObject: {fileID: 364422430}
   preGameLobbyModal: {fileID: 1348206273}
+  roomBrowserModal: {fileID: 5616114101993008089}
 --- !u!1 &1361575795
 GameObject:
   m_ObjectHideFlags: 0
