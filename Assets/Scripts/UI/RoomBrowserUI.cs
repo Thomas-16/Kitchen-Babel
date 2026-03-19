@@ -80,6 +80,7 @@ public class RoomBrowserUI : MonoBehaviour
     public void OnCreateRoomClicked()
     {
         if (NetworkRunnerManager.Instance.IsBusy) return;
+        if (roomBrowserModal != null) roomBrowserModal.CloseWindow();
         if (createRoomModal != null) createRoomModal.OpenWindow();
     }
 

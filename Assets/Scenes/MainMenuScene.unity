@@ -69357,6 +69357,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreateRoomModalUI
   createRoomModal: {fileID: 2049322187}
+  roomBrowserModal: {fileID: 5616114101993008089}
   passwordInputContainer: {fileID: 337378546}
   passwordInputField: {fileID: 337378549}
   invalidPasswordText: {fileID: 482819625}

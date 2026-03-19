@@ -6,6 +6,7 @@ using UnityEngine;
 public class CreateRoomModalUI : MonoBehaviour
 {
     [SerializeField] private ModalWindowManager createRoomModal;
+    [SerializeField] private ModalWindowManager roomBrowserModal;
     [SerializeField] private GameObject passwordInputContainer;
     [SerializeField] private TMP_InputField passwordInputField;
     [SerializeField] private GameObject invalidPasswordText;
@@ -49,6 +50,7 @@ public class CreateRoomModalUI : MonoBehaviour
     public void OnCancelClicked()
     {
         if (createRoomModal != null) createRoomModal.CloseWindow();
+        if (roomBrowserModal != null) roomBrowserModal.OpenWindow();
         ResetState();
     }
 
