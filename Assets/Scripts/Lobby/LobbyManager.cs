@@ -89,9 +89,8 @@ public class LobbyManager : NetworkBehaviour
             if (Players.Get(i).Player == player)
             {
                 var data = Players.Get(i);
-                Players.Remove(data);
                 data.PlayerName = name;
-                Players.Add(data);
+                Players.Set(i, data);
                 PlayersVersion++;
                 return;
             }
@@ -106,9 +105,8 @@ public class LobbyManager : NetworkBehaviour
             if (Players.Get(i).Player == player)
             {
                 var data = Players.Get(i);
-                Players.Remove(data);
                 data.IsReady = !data.IsReady;
-                Players.Add(data);
+                Players.Set(i, data);
                 PlayersVersion++;
                 return;
             }
