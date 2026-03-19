@@ -20,7 +20,7 @@ public class PreGameLobbyUI : MonoBehaviour
     {
         if (LobbyManager.Instance == null)
         {
-            Debug.Log("[PreGameLobbyUI] Update: LobbyManager.Instance is NULL");
+            // Debug.Log("[PreGameLobbyUI] Update: LobbyManager.Instance is NULL");
             return;
         }
         if (LobbyManager.Instance.PlayersVersion == lastSeenVersion) return;
