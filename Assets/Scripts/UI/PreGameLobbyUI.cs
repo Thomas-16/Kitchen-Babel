@@ -1,3 +1,4 @@
+using Michsky.UI.Heat;
 using UnityEngine;
 
 public class PreGameLobbyUI : MonoBehaviour
@@ -5,6 +6,7 @@ public class PreGameLobbyUI : MonoBehaviour
     [SerializeField] private Transform playerListContent;
     [SerializeField] private GameObject playerTemplatePrefab;
     [SerializeField] private GameObject startButtonObject;
+    [SerializeField] private ModalWindowManager preGameLobbyModal;
 
     private void Start()
     {
@@ -50,7 +52,7 @@ public class PreGameLobbyUI : MonoBehaviour
 
     private void HandleDisconnected()
     {
-        // User wires disconnect handling via Unity Events if needed
+        if (preGameLobbyModal != null) preGameLobbyModal.CloseWindow();
     }
 
     private void RefreshPlayerList()

@@ -10,6 +10,8 @@ public class RoomBrowserUI : MonoBehaviour
     [SerializeField] private Transform roomListContent;
     [SerializeField] private GameObject roomTemplatePrefab;
     [SerializeField] private NotificationManager incorrectPWNotification;
+    [SerializeField] private ModalWindowManager roomBrowserModal;
+    [SerializeField] private ModalWindowManager preGameLobbyModal;
 
     private void Start()
     {
@@ -17,6 +19,8 @@ public class RoomBrowserUI : MonoBehaviour
             searchInput.onValueChanged.AddListener(_ => RefreshRoomList());
 
         NetworkRunnerManager.Instance.SessionListUpdated += HandleSessionListUpdated;
+        NetworkRunnerManager.Instance.OnJoinedSession += HandleJoinedSession;
+        NetworkRunnerManager.Instance.OnJoinFailed += HandleJoinFailed;
     }
 
     private void OnEnable()
@@ -27,7 +31,11 @@ public class RoomBrowserUI : MonoBehaviour
     private void OnDestroy()
     {
         if (NetworkRunnerManager.Instance != null)
+        {
             NetworkRunnerManager.Instance.SessionListUpdated -= HandleSessionListUpdated;
+            NetworkRunnerManager.Instance.OnJoinedSession -= HandleJoinedSession;
+            NetworkRunnerManager.Instance.OnJoinFailed -= HandleJoinFailed;
+        }
     }
 
     private void HandleSessionListUpdated(List<SessionInfo> sessions)
@@ -70,6 +78,17 @@ public class RoomBrowserUI : MonoBehaviour
     public void OnCreateRoomClicked()
     {
         NetworkRunnerManager.Instance.CreateRoom("Player's Room", "", 4);
+    }
+
+    private void HandleJoinedSession()
+    {
+        if (roomBrowserModal != null) roomBrowserModal.CloseWindow();
+        if (preGameLobbyModal != null) preGameLobbyModal.OpenWindow();
+    }
+
+    private void HandleJoinFailed(string reason)
+    {
+        // Room browser stays open, notification already shown by TryJoinRoom
     }
 
     private void ShowIncorrectPWNotification()
