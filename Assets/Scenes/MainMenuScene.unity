@@ -17537,7 +17537,7 @@ MonoBehaviour:
       - m_Target: {fileID: 2049322191}
         m_TargetAssemblyTypeName: CreateRoomModalUI, Assembly-CSharp
         m_MethodName: OnRequirePasswordChanged
-        m_Mode: 6
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -28778,7 +28778,7 @@ MonoBehaviour:
       - m_Target: {fileID: 2049322191}
         m_TargetAssemblyTypeName: CreateRoomModalUI, Assembly-CSharp
         m_MethodName: OnMaxPlayersChanged
-        m_Mode: 3
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
