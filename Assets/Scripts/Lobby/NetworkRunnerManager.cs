@@ -108,6 +108,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             await ShutdownRunner();
 
             Runner = CreateRunner();
+            Runner.ProvideInput = true;
 
             Dictionary<string, SessionProperty> sessionProps = new Dictionary<string, SessionProperty>();
             if (!string.IsNullOrEmpty(password))
@@ -160,6 +161,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             await ShutdownRunner();
 
             Runner = CreateRunner();
+            Runner.ProvideInput = true;
 
             NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));

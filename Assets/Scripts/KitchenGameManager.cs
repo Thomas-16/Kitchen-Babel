@@ -56,6 +56,7 @@ public class KitchenGameManager : NetworkBehaviour
         foreach(string propertyName in changeDetector.DetectChanges(this)){
             switch(propertyName){
                 case nameof(NetworkedState):
+                    Debug.Log($"[KGM] State changed to {(State)NetworkedState}");
                     OnStateChanged?.Invoke(this, EventArgs.Empty);
                     break;
                 case nameof(IsPaused):

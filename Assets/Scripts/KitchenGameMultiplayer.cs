@@ -73,7 +73,12 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
         // Fusion handles despawning player objects automatically
     }
 
+    private bool hasLoggedOnInput = false;
     public void OnInput(NetworkRunner runner, NetworkInput input){
+        if(!hasLoggedOnInput){
+            hasLoggedOnInput = true;
+            Debug.Log($"[KGM] OnInput called! GameInput={GameInput.Instance != null}");
+        }
         PlayerNetworkInput playerInput = new PlayerNetworkInput();
         playerInput.moveDirection = GameInput.Instance.GetMovementVectorNormalized();
 
