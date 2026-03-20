@@ -41,7 +41,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         }
     }
 
-    private bool hasLoggedFirstInput = false;
     public override void FixedUpdateNetwork(){
         if(KitchenGameManager.Instance == null) return;
         if(KitchenGameManager.Instance.IsPaused) return;
@@ -52,10 +51,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         }
 
         if(GetInput(out PlayerNetworkInput input)){
-            if(!hasLoggedFirstInput){
-                hasLoggedFirstInput = true;
-                Debug.Log($"[Player] GetInput succeeded! move={input.moveDirection}");
-            }
             HandleMovement(input);
             HandleCounterSelection(input);
 
@@ -74,9 +69,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
                 }
                 PreviousButtons = input.buttons;
             }
-        } else if(!hasLoggedFirstInput && KitchenGameManager.Instance.IsGamePlaying()){
-            hasLoggedFirstInput = true;
-            Debug.Log($"[Player] GetInput FAILED during GamePlaying! HasInputAuth={HasInputAuthority}");
         }
     }
 
