@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
@@ -15,6 +16,19 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
     public override void Spawned(){
         Instance = this;
         Runner.AddCallbacks(this);
+
+        // Spawn player characters for all players already in the session
+        Debug.Log($"[KGM] Spawned() called. IsServer={Runner.IsServer}, ActivePlayers count={Runner.ActivePlayers.Count()}");
+        if (Runner.IsServer)
+        {
+            foreach (PlayerRef player in Runner.ActivePlayers)
+            {
+                int spawnIndex = player.AsIndex % spawnPositions.Count;
+                Transform spawnPoint = spawnPositions[spawnIndex];
+                Debug.Log($"[KGM] Spawning player prefab for {player} at index {spawnIndex}, pos={spawnPoint.position}");
+                Runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player);
+            }
+        }
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState){
@@ -46,6 +60,7 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     // INetworkRunnerCallbacks
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player){
+        Debug.Log($"[KGM] OnPlayerJoined: {player}, IsServer={runner.IsServer}");
         if(runner.IsServer){
             int spawnIndex = player.AsIndex % spawnPositions.Count;
             Transform spawnPoint = spawnPositions[spawnIndex];

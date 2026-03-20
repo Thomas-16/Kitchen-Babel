@@ -34,13 +34,21 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     }
 
     public override void Spawned(){
+        Debug.Log($"[Player] Spawned! HasInputAuthority={HasInputAuthority}, HasStateAuthority={HasStateAuthority}, InputAuthority={Object.InputAuthority}");
         if(HasInputAuthority){
             LocalInstance = this;
             OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
         }
     }
 
+    private bool hasLoggedFirstUpdate = false;
     public override void FixedUpdateNetwork(){
+        if(!hasLoggedFirstUpdate){
+            hasLoggedFirstUpdate = true;
+            Debug.Log($"[Player] First FixedUpdateNetwork! KGM.Instance={KitchenGameManager.Instance != null}, " +
+                $"IsPlaying={KitchenGameManager.Instance?.IsGamePlaying()}, IsWaiting={KitchenGameManager.Instance?.IsWaitingToStart()}, " +
+                $"HasInputAuth={HasInputAuthority}");
+        }
         if(KitchenGameManager.Instance == null) return;
         if(KitchenGameManager.Instance.IsPaused) return;
 
