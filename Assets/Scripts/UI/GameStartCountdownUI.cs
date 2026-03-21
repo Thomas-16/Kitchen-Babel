@@ -18,11 +18,22 @@ public class GameStartCountdownUI : MonoBehaviour
         KitchenGameManager.OnInstanceReady += KitchenGameManager_OnInstanceReady;
         if(KitchenGameManager.Instance != null){
             KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
+            if(KitchenGameManager.Instance.IsCountdownToStartActive()){
+                Show();
+            }else{
+                Hide();
+            }
+        }else{
+            Hide();
         }
-        Hide();
     }
     private void KitchenGameManager_OnInstanceReady(object sender, EventArgs e){
         KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
+        if(KitchenGameManager.Instance.IsCountdownToStartActive()){
+            Show();
+        }else{
+            Hide();
+        }
     }
     private void KitchenGameManager_OnStateChanged(object sender, EventArgs e){
         if(KitchenGameManager.Instance.IsCountdownToStartActive()){
