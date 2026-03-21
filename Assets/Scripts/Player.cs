@@ -36,6 +36,8 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Debug.Log($"[Player] Spawned! HasInputAuthority={HasInputAuthority}, HasStateAuthority={HasStateAuthority}, InputAuthority={Object.InputAuthority}");
         if(HasInputAuthority){
             LocalInstance = this;
+            // Render from predicted state so client sees their own prediction, not delayed server snapshots
+            Object.RenderTimeframe = RenderTimeframe.Local;
             OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
         }
     }
