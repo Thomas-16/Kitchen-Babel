@@ -36,6 +36,8 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Debug.Log($"[Player] Spawned! HasInputAuthority={HasInputAuthority}, HasStateAuthority={HasStateAuthority}, InputAuthority={Object.InputAuthority}");
         if(HasInputAuthority){
             LocalInstance = this;
+            // Render from predicted state so client sees their own prediction, not delayed server snapshots
+            Object.RenderTimeframe = RenderTimeframe.Local;
             OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -51,22 +53,27 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
         if(GetInput(out PlayerNetworkInput input)){
             HandleMovement(input);
-            HandleCounterSelection(input);
 
-            // Only host executes interactions (spawn/modify networked objects)
-            if(Object.HasStateAuthority){
-                NetworkButtons pressed = input.buttons.GetPressed(PreviousButtons);
-                if(pressed.IsSet(InputButton.Interact)){
-                    if(selectedCounter != null){
-                        selectedCounter.Interact(this);
+            // Only run counter selection & interactions during forward simulation.
+            // Physics.Raycast doesn't rewind during resimulation, causing prediction mismatches.
+            if(Runner.IsForward){
+                HandleCounterSelection(input);
+
+                // Only host executes interactions (spawn/modify networked objects)
+                if(Object.HasStateAuthority){
+                    NetworkButtons pressed = input.buttons.GetPressed(PreviousButtons);
+                    if(pressed.IsSet(InputButton.Interact)){
+                        if(selectedCounter != null){
+                            selectedCounter.Interact(this);
+                        }
                     }
-                }
-                if(pressed.IsSet(InputButton.InteractAlternate)){
-                    if(selectedCounter != null){
-                        selectedCounter.InteractAlternate(this);
+                    if(pressed.IsSet(InputButton.InteractAlternate)){
+                        if(selectedCounter != null){
+                            selectedCounter.InteractAlternate(this);
+                        }
                     }
+                    PreviousButtons = input.buttons;
                 }
-                PreviousButtons = input.buttons;
             }
         }
     }
