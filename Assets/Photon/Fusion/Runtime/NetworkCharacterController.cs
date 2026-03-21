@@ -49,6 +49,8 @@ namespace Fusion {
     Tick                _initial;
     CharacterController _controller;
     Vector3             _renderPositionError;
+    Vector3             _lastForwardPosition;
+    bool                _hadResimulation;
     const float         ERROR_CORRECTION_RATE = 10f;
 
     public Vector3 Velocity {
@@ -117,6 +119,7 @@ namespace Fusion {
       _controller.enabled = false;
       _controller.enabled = true;
       CopyToBuffer();
+      _lastForwardPosition = transform.position;
     }
 
     public override void Render() {
@@ -133,19 +136,22 @@ namespace Fusion {
     }
 
     void IBeforeAllTicks.BeforeAllTicks(bool resimulation, int tickCount) {
-      if (resimulation && Runner != null && !Runner.IsServer) {
-        // Capture predicted position before server state overwrites it
-        Vector3 predictedPos = transform.position;
-        CopyToEngine();
-        // The delta is the prediction error to smooth out visually
-        _renderPositionError += predictedPos - transform.position;
-      } else {
-        CopyToEngine();
+      if (resimulation) {
+        _hadResimulation = true;
       }
+      CopyToEngine();
     }
 
     void IAfterAllTicks.AfterAllTicks(bool resimulation, int tickCount) {
       CopyToBuffer();
+      if (!resimulation) {
+        if (_hadResimulation && Runner != null && !Runner.IsServer) {
+          // Error = old predicted pos - new corrected predicted pos
+          _renderPositionError = _lastForwardPosition - transform.position;
+          _hadResimulation = false;
+        }
+        _lastForwardPosition = transform.position;
+      }
     }
 
     void IBeforeCopyPreviousState.BeforeCopyPreviousState() {
