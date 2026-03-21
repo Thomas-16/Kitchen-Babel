@@ -48,8 +48,9 @@ namespace Fusion {
 
     Tick                _initial;
     CharacterController _controller;
-    Vector3             _renderErrorPos;
-    Quaternion          _renderErrorRot;
+    Vector3             _smoothPos;
+    Quaternion          _smoothRot;
+    bool                _smoothInitialized;
 
     public Vector3 Velocity {
       get => Data.Velocity;
@@ -65,8 +66,6 @@ namespace Fusion {
       _controller.enabled = false;
       NetworkTRSP.Teleport(this, transform, position, rotation);
       _controller.enabled = true;
-      _renderErrorPos = Vector3.zero;
-      _renderErrorRot = Quaternion.identity;
     }
 
 
@@ -113,6 +112,7 @@ namespace Fusion {
     
     public override void Spawned() {
       _initial = default;
+      _smoothInitialized = false;
       TryGetComponent(out _controller);
       // Without disabling and re-enabling the CharacterController here, the first Move call will reset the position to 0,0,0 instead of
       // keeping the position it was spawned at. Presumably disabling it clears some kind of internally cached "previous position" value
@@ -122,46 +122,23 @@ namespace Fusion {
     }
 
     public override void Render() {
-      // Error-offset smoothing for the local client player to absorb prediction corrections
+      NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
+
+      // For the local client player: smooth rendered position to absorb prediction corrections
       if (Runner != null && !Runner.IsServer && Object != null && Object.HasInputAuthority) {
-        // 1. Capture pre-correction position and rotation
-        Vector3 prePos = transform.position;
-        Quaternion preRot = transform.rotation;
-
-        // 2. Apply the authoritative render state (may snap the transform on correction)
-        NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
-
-        // 3. Accumulate the correction delta into the error offset
-        _renderErrorPos += prePos - transform.position;
-        _renderErrorRot = (preRot * Quaternion.Inverse(transform.rotation)) * _renderErrorRot;
-
-        // 4. If error is too large (e.g. teleport), snap immediately
-        if (_renderErrorPos.sqrMagnitude > 4f) {
-          _renderErrorPos = Vector3.zero;
-          _renderErrorRot = Quaternion.identity;
+        if (!_smoothInitialized) {
+          _smoothPos = transform.position;
+          _smoothRot = transform.rotation;
+          _smoothInitialized = true;
         }
 
-        // 5. Decay error toward zero (~12 gives ~150ms absorption at 60fps)
-        float t = 1f - Mathf.Exp(-12f * Time.deltaTime);
-        _renderErrorPos = Vector3.Lerp(_renderErrorPos, Vector3.zero, t);
-        _renderErrorRot = Quaternion.Slerp(_renderErrorRot, Quaternion.identity, t);
+        float t = 1f - Mathf.Exp(-50f * Time.deltaTime);
+        _smoothPos = Vector3.Lerp(_smoothPos, transform.position, t);
+        _smoothRot = Quaternion.Slerp(_smoothRot, transform.rotation, t);
 
-        // 6. Snap negligible error to zero to prevent float drift
-        if (_renderErrorPos.sqrMagnitude < 1e-6f)
-          _renderErrorPos = Vector3.zero;
-        if (Quaternion.Angle(_renderErrorRot, Quaternion.identity) < 0.01f)
-          _renderErrorRot = Quaternion.identity;
-
-        // 7. Apply error offset to the rendered position
         _controller.enabled = false;
-        transform.SetPositionAndRotation(
-          transform.position + _renderErrorPos,
-          _renderErrorRot * transform.rotation
-        );
+        transform.SetPositionAndRotation(_smoothPos, _smoothRot);
         _controller.enabled = true;
-      } else {
-        // Host or non-input-authority: render normally
-        NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
       }
     }
 
