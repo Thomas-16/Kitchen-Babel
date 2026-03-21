@@ -48,8 +48,6 @@ namespace Fusion {
 
     Tick                _initial;
     CharacterController _controller;
-    Vector3             _renderPositionError;
-    const float         ERROR_CORRECTION_RATE = 10f;
 
     public Vector3 Velocity {
       get => Data.Velocity;
@@ -121,27 +119,10 @@ namespace Fusion {
 
     public override void Render() {
       NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
-
-      // Smoothly decay prediction error instead of snapping
-      if (_renderPositionError.sqrMagnitude > 0.0001f) {
-        _renderPositionError = Vector3.Lerp(_renderPositionError, Vector3.zero,
-          UnityEngine.Time.deltaTime * ERROR_CORRECTION_RATE);
-        transform.position += _renderPositionError;
-      } else {
-        _renderPositionError = Vector3.zero;
-      }
     }
 
     void IBeforeAllTicks.BeforeAllTicks(bool resimulation, int tickCount) {
-      if (resimulation && Runner != null && !Runner.IsServer) {
-        // Capture predicted position before server state overwrites it
-        Vector3 predictedPos = transform.position;
-        CopyToEngine();
-        // The delta is the prediction error to smooth out visually
-        _renderPositionError += predictedPos - transform.position;
-      } else {
-        CopyToEngine();
-      }
+      CopyToEngine();
     }
 
     void IAfterAllTicks.AfterAllTicks(bool resimulation, int tickCount) {
