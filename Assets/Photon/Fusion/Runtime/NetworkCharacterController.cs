@@ -78,7 +78,16 @@ namespace Fusion {
     }
 
     public void Move(Vector3 direction) {
-      var deltaTime    = Runner.DeltaTime;
+      var deltaTime = Runner.DeltaTime;
+
+      // Client-authoritative: on forward ticks, simulate from client's own position
+      bool isLocalForward = !Runner.IsServer && Object.HasInputAuthority && Runner.IsForward;
+      if (isLocalForward && _clientInitialized) {
+        _controller.enabled = false;
+        transform.SetPositionAndRotation(_clientPos, _clientRot);
+        _controller.enabled = true;
+      }
+
       var previousPos  = transform.position;
       var moveVelocity = Data.Velocity;
 
@@ -109,17 +118,11 @@ namespace Fusion {
       Data.Velocity = (transform.position - previousPos) * Runner.TickRate;
       Data.Grounded = _controller.isGrounded;
 
-      // Accumulate client-authoritative position from forward ticks only
-      if (!Runner.IsServer && Object.HasInputAuthority && Runner.IsForward) {
-        Vector3 moveDelta = transform.position - previousPos;
-        if (!_clientInitialized) {
-          _clientPos = transform.position;
-          _clientRot = transform.rotation;
-          _clientInitialized = true;
-        } else {
-          _clientPos += moveDelta;
-          _clientRot = transform.rotation;
-        }
+      // Save client's simulation result from forward ticks
+      if (isLocalForward) {
+        _clientPos = transform.position;
+        _clientRot = transform.rotation;
+        _clientInitialized = true;
       }
     }
     
