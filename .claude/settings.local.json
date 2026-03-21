@@ -14,10 +14,7 @@
       "mcp__UnityMCP__unity_reflect",
       "WebFetch(domain:forum.photonengine.com)",
       "Bash(xargs cat:*)",
-      "WebFetch(domain:discussions.unity.com)",
-      "Bash(curl -s https://doc.photonengine.com/fusion/current/manual/data-transfer/interpolation)",
-      "Bash(curl -s https://doc.photonengine.com/fusion/current/manual/network-object/network-transform)",
-      "Bash(curl -s https://doc.photonengine.com/fusion/current/manual/network-object/network-character-controller)"
+      "WebFetch(domain:discussions.unity.com)"
     ]
   }
 }

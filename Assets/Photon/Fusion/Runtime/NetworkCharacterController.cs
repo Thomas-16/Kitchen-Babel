@@ -48,8 +48,6 @@ namespace Fusion {
 
     Tick                _initial;
     CharacterController _controller;
-    Vector3             _renderPositionError;
-    const float         ERROR_CORRECTION_RATE = 10f;
 
     public Vector3 Velocity {
       get => Data.Velocity;
@@ -121,15 +119,6 @@ namespace Fusion {
 
     public override void Render() {
       NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
-
-      // Smooth out prediction error visually on clients
-      if (_renderPositionError.sqrMagnitude > 0.0001f) {
-        _renderPositionError = Vector3.Lerp(_renderPositionError, Vector3.zero,
-          UnityEngine.Time.deltaTime * ERROR_CORRECTION_RATE);
-        transform.position += _renderPositionError;
-      } else {
-        _renderPositionError = Vector3.zero;
-      }
     }
 
     void IBeforeAllTicks.BeforeAllTicks(bool resimulation, int tickCount) {
@@ -154,8 +143,6 @@ namespace Fusion {
     }
 
     void CopyToEngine() {
-      Vector3 previousPos = transform.position;
-
       // CC must be disabled before resetting the transform state
       _controller.enabled = false;
 
@@ -164,11 +151,6 @@ namespace Fusion {
 
       // Re-enable CC
       _controller.enabled = true;
-
-      // Capture the correction delta for smooth visual interpolation on clients
-      if (Runner != null && !Runner.IsServer) {
-        _renderPositionError += previousPos - transform.position;
-      }
     }
   }
 }
