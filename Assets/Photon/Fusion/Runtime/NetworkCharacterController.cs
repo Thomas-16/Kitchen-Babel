@@ -48,6 +48,9 @@ namespace Fusion {
 
     Tick                _initial;
     CharacterController _controller;
+    Vector3             _clientPos;
+    Quaternion          _clientRot;
+    bool                _clientInitialized;
 
     public Vector3 Velocity {
       get => Data.Velocity;
@@ -105,10 +108,24 @@ namespace Fusion {
 
       Data.Velocity = (transform.position - previousPos) * Runner.TickRate;
       Data.Grounded = _controller.isGrounded;
+
+      // Accumulate client-authoritative position from forward ticks only
+      if (!Runner.IsServer && Object.HasInputAuthority && Runner.IsForward) {
+        Vector3 moveDelta = transform.position - previousPos;
+        if (!_clientInitialized) {
+          _clientPos = transform.position;
+          _clientRot = transform.rotation;
+          _clientInitialized = true;
+        } else {
+          _clientPos += moveDelta;
+          _clientRot = transform.rotation;
+        }
+      }
     }
     
     public override void Spawned() {
       _initial = default;
+      _clientInitialized = false;
       TryGetComponent(out _controller);
       // Without disabling and re-enabling the CharacterController here, the first Move call will reset the position to 0,0,0 instead of
       // keeping the position it was spawned at. Presumably disabling it clears some kind of internally cached "previous position" value
@@ -118,8 +135,13 @@ namespace Fusion {
     }
 
     public override void Render() {
-      // Client-authoritative: local player uses raw simulation position
-      if (!Runner.IsServer && Object.HasInputAuthority) return;
+      // Client-authoritative: show the client's own accumulated position
+      if (!Runner.IsServer && Object.HasInputAuthority && _clientInitialized) {
+        _controller.enabled = false;
+        transform.SetPositionAndRotation(_clientPos, _clientRot);
+        _controller.enabled = true;
+        return;
+      }
 
       NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
     }
@@ -146,9 +168,6 @@ namespace Fusion {
     }
 
     void CopyToEngine() {
-      // Client-authoritative: don't snap local player to server state
-      if (!Runner.IsServer && Object.HasInputAuthority) return;
-
       // CC must be disabled before resetting the transform state
       _controller.enabled = false;
 
