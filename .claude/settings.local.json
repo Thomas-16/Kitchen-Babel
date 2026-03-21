@@ -14,7 +14,9 @@
       "mcp__UnityMCP__unity_reflect",
       "WebFetch(domain:forum.photonengine.com)",
       "Bash(xargs cat:*)",
-      "WebFetch(domain:discussions.unity.com)"
+      "WebFetch(domain:discussions.unity.com)",
+      "WebFetch(domain:doc-api.photonengine.com)",
+      "Bash(python3:*)"
     ]
   }
 }
