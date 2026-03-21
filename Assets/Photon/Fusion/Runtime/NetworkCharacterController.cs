@@ -48,6 +48,8 @@ namespace Fusion {
 
     Tick                _initial;
     CharacterController _controller;
+    Vector3             _positionRenderError;
+    const float         ERROR_CORRECTION_RATE = 15f;
 
     public Vector3 Velocity {
       get => Data.Velocity;
@@ -119,10 +121,31 @@ namespace Fusion {
 
     public override void Render() {
       NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
+
+      // Smooth out prediction correction errors for client players
+      if (_positionRenderError.sqrMagnitude > 0.000001f) {
+        _positionRenderError = Vector3.Lerp(_positionRenderError, Vector3.zero,
+          Time.deltaTime * ERROR_CORRECTION_RATE);
+        transform.position += _positionRenderError;
+      } else {
+        _positionRenderError = Vector3.zero;
+      }
     }
 
     void IBeforeAllTicks.BeforeAllTicks(bool resimulation, int tickCount) {
-      CopyToEngine();
+      if (resimulation && Runner != null && !Runner.IsServer) {
+        // Capture the visual position before snapping to server state
+        Vector3 visualPos = transform.position;
+        CopyToEngine();
+        // Accumulate the correction as render error to be smoothed out
+        _positionRenderError += visualPos - transform.position;
+        // If error is too large (> 2 units), teleport instead of smoothing
+        if (_positionRenderError.sqrMagnitude > 4f) {
+          _positionRenderError = Vector3.zero;
+        }
+      } else {
+        CopyToEngine();
+      }
     }
 
     void IAfterAllTicks.AfterAllTicks(bool resimulation, int tickCount) {

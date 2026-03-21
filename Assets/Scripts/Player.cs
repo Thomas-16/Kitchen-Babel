@@ -36,6 +36,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Debug.Log($"[Player] Spawned! HasInputAuthority={HasInputAuthority}, HasStateAuthority={HasStateAuthority}, InputAuthority={Object.InputAuthority}");
         if(HasInputAuthority){
             LocalInstance = this;
+
             OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -51,7 +52,13 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
         if(GetInput(out PlayerNetworkInput input)){
             HandleMovement(input);
-            HandleCounterSelection(input);
+
+            // Only run raycasts on forward ticks, not during resimulation.
+            // Physics state isn't rewound during resim, so raycasts return
+            // different results → prediction diverges → jitter.
+            if(Runner.IsForward){
+                HandleCounterSelection(input);
+            }
 
             // Only host executes interactions (spawn/modify networked objects)
             if(Object.HasStateAuthority){
