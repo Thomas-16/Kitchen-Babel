@@ -48,6 +48,9 @@ namespace Fusion {
 
     Tick                _initial;
     CharacterController _controller;
+    Vector3             _smoothPos;
+    Quaternion          _smoothRot;
+    bool                _smoothInitialized;
 
     public Vector3 Velocity {
       get => Data.Velocity;
@@ -109,6 +112,7 @@ namespace Fusion {
     
     public override void Spawned() {
       _initial = default;
+      _smoothInitialized = false;
       TryGetComponent(out _controller);
       // Without disabling and re-enabling the CharacterController here, the first Move call will reset the position to 0,0,0 instead of
       // keeping the position it was spawned at. Presumably disabling it clears some kind of internally cached "previous position" value
@@ -119,6 +123,23 @@ namespace Fusion {
 
     public override void Render() {
       NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
+
+      // For the local client player: smooth rendered position to absorb prediction corrections
+      if (Runner != null && !Runner.IsServer && Object != null && Object.HasInputAuthority) {
+        if (!_smoothInitialized) {
+          _smoothPos = transform.position;
+          _smoothRot = transform.rotation;
+          _smoothInitialized = true;
+        }
+
+        float t = 1f - Mathf.Exp(-50f * Time.deltaTime);
+        _smoothPos = Vector3.Lerp(_smoothPos, transform.position, t);
+        _smoothRot = Quaternion.Slerp(_smoothRot, transform.rotation, t);
+
+        _controller.enabled = false;
+        transform.SetPositionAndRotation(_smoothPos, _smoothRot);
+        _controller.enabled = true;
+      }
     }
 
     void IBeforeAllTicks.BeforeAllTicks(bool resimulation, int tickCount) {
