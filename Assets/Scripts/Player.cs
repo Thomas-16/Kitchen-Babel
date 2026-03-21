@@ -15,11 +15,10 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         public BaseCounter selectedCounter;
     }
 
-    [SerializeField] private float moveSpeed = 7f;
     [SerializeField] private LayerMask countersLayerMask;
     [SerializeField] private Transform kitchenObjectHoldPoint;
 
-    [SerializeField] private CharacterController controller;
+    [SerializeField] private NetworkCharacterController networkController;
 
     [Networked] public NetworkBool IsWalking { get; set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
@@ -97,17 +96,9 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Vector2 inputVector = input.moveDirection;
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
-        float moveDistance = moveSpeed * Runner.DeltaTime;
-
-        if(moveDir != Vector3.zero){
-            controller.Move(moveDir * moveDistance);
-        }
+        networkController.Move(moveDir);
 
         IsWalking = moveDir != Vector3.zero;
-        if(IsWalking){
-            float rotateSpeed = 10f;
-            transform.forward = Vector3.Slerp(transform.forward, moveDir, Runner.DeltaTime * rotateSpeed);
-        }
     }
 
     private void SetSelectedCounter(BaseCounter selectedCounter){
