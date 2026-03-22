@@ -13,9 +13,24 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
     [SerializeField] private List<Transform> spawnPositions;
     [SerializeField] private KitchenObjectListSO kitchenObjectListSO;
 
+    private static bool isHostMigrationResume;
+
+    public static void SetHostMigrationFlag()
+    {
+        isHostMigrationResume = true;
+    }
+
     public override void Spawned(){
         Instance = this;
         Runner.AddCallbacks(this);
+
+        // During host migration, player objects are restored from the snapshot — don't spawn duplicates
+        if (isHostMigrationResume)
+        {
+            Debug.Log("[KGM] Spawned() during host migration — skipping player spawning.");
+            isHostMigrationResume = false;
+            return;
+        }
 
         // Spawn player characters for all players already in the session
         Debug.Log($"[KGM] Spawned() called. IsServer={Runner.IsServer}, ActivePlayers count={Runner.ActivePlayers.Count()}");
@@ -70,7 +85,24 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player){
-        // Fusion handles despawning player objects automatically
+        if (!runner.IsServer) return;
+
+        // Despawn any kitchen object held by the leaving player before Fusion auto-despawns them
+        foreach (NetworkObject networkObject in runner.GetAllNetworkObjects())
+        {
+            if (networkObject.InputAuthority != player) continue;
+
+            Player playerComponent = networkObject.GetComponent<Player>();
+            if (playerComponent != null && playerComponent.HasKitchenObject())
+            {
+                KitchenObject heldObject = playerComponent.GetKitchenObject();
+                if (heldObject != null && heldObject.Object != null && heldObject.Object.IsValid)
+                {
+                    Debug.Log($"[KGM] Despawning kitchen object held by leaving player {player}");
+                    runner.Despawn(heldObject.Object);
+                }
+            }
+        }
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input){

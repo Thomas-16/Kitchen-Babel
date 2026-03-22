@@ -30,7 +30,7 @@ public class DeliveryManager : NetworkBehaviour
     public override void Spawned(){
         Instance = this;
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        lastKnownRecipeCount = 0;
+        lastKnownRecipeCount = WaitingRecipeIndices.Count;
         OnInstanceReady?.Invoke(this, EventArgs.Empty);
     }
 

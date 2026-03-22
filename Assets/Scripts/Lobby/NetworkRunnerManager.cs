@@ -23,6 +23,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public bool IsBusy { get; private set; }
 
     private bool pendingLobbyManagerSpawn;
+    private bool isMigrating;
 
     private async Task ShutdownRunner()
     {
@@ -289,6 +290,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
+        if (shutdownReason == ShutdownReason.HostMigration) return;
+
+        if (isMigrating) return;
+
         if (shutdownReason != ShutdownReason.Ok)
         {
             OnDisconnected?.Invoke();
@@ -297,6 +302,12 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
+        if (isMigrating)
+        {
+            Debug.Log("[NetworkRunnerManager] OnDisconnectedFromServer during migration — ignoring.");
+            return;
+        }
+
         OnDisconnected?.Invoke();
         SceneManager.LoadScene("MainMenuScene");
     }
@@ -310,7 +321,84 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
-    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
+    public async void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
+    {
+        Debug.Log("[NetworkRunnerManager] OnHostMigration triggered. Starting migration...");
+        isMigrating = true;
+
+        try
+        {
+            // Signal KitchenGameMultiplayer to skip player spawning after migration
+            KitchenGameMultiplayer.SetHostMigrationFlag();
+
+            // Shutdown old runner with HostMigration reason so OnShutdown knows to ignore it
+            await runner.Shutdown(shutdownReason: ShutdownReason.HostMigration);
+            Runner = null;
+
+            // Create new runner
+            Runner = CreateRunner();
+            Runner.ProvideInput = true;
+
+            // Start as new host with migration token + resume callback
+            StartGameResult result = await Runner.StartGame(new StartGameArgs
+            {
+                HostMigrationToken = hostMigrationToken,
+                HostMigrationResume = HostMigrationResume,
+            });
+
+            if (!result.Ok)
+            {
+                Debug.LogError($"[NetworkRunnerManager] Host migration failed: {result.ShutdownReason}");
+                OnDisconnected?.Invoke();
+                SceneManager.LoadScene("MainMenuScene");
+            }
+            else
+            {
+                Debug.Log("[NetworkRunnerManager] Host migration succeeded. New host is running.");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[NetworkRunnerManager] Exception during host migration: {e}");
+            OnDisconnected?.Invoke();
+            SceneManager.LoadScene("MainMenuScene");
+        }
+        finally
+        {
+            isMigrating = false;
+        }
+    }
+
+    private void HostMigrationResume(NetworkRunner runner)
+    {
+        Debug.Log("[NetworkRunnerManager] HostMigrationResume — restoring game state from snapshot...");
+
+        // 1. Restore scene object state (counters, KitchenGameManager, DeliveryManager, etc.)
+        //    Scene objects already exist in the loaded scene; we just copy their networked state
+        //    from the snapshot.
+        foreach ((NetworkObject sceneObject, NetworkObjectHeaderPtr snapshotData) in runner.GetResumeSnapshotNetworkSceneObjects())
+        {
+            sceneObject.CopyStateFrom(snapshotData);
+            Debug.Log($"[HostMigration] Restored scene object: {sceneObject.name}");
+        }
+
+        // 2. Re-spawn runtime objects from the snapshot (Players, KitchenObjects, LobbyManager)
+        //    These objects don't exist in the scene — they were dynamically spawned and need
+        //    to be re-created. We spawn them and copy the old networked state via CopyStateFrom.
+        foreach (NetworkObject resumeNO in runner.GetResumeSnapshotNetworkObjects())
+        {
+            runner.Spawn(resumeNO,
+                position: resumeNO.transform.position,
+                rotation: resumeNO.transform.rotation,
+                inputAuthority: resumeNO.InputAuthority,
+                onBeforeSpawned: (NetworkRunner r, NetworkObject newNO) =>
+                {
+                    newNO.CopyStateFrom(resumeNO);
+                }
+            );
+            Debug.Log($"[HostMigration] Re-spawned object: {resumeNO.name}, InputAuthority={resumeNO.InputAuthority}");
+        }
+    }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }

@@ -19,7 +19,7 @@ public class PlatesCounter : BaseCounter
 
     public override void Spawned(){
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        lastKnownPlateCount = 0;
+        lastKnownPlateCount = PlatesSpawnAmount;
     }
 
     public override void Render(){

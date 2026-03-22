@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Fusion;
 using UnityEngine;
 
@@ -22,8 +24,36 @@ public class LobbyManager : NetworkBehaviour
 
         if (HasStateAuthority)
         {
-            playerJoinCounter = 0;
+            // On migration, Players list is restored from snapshot — continue numbering from current count
+            // On fresh start, Players.Count is 0 so this is equivalent to the old playerJoinCounter = 0
+            playerJoinCounter = Players.Count;
+
+            // Remove stale player entries from the old host or disconnected players
+            RemoveStalePlayerEntries();
+
             AddPlayer(Runner.LocalPlayer);
+        }
+    }
+
+    private void RemoveStalePlayerEntries()
+    {
+        List<PlayerRef> activePlayers = Runner.ActivePlayers.ToList();
+        bool changed = false;
+
+        for (int i = Players.Count - 1; i >= 0; i--)
+        {
+            LobbyPlayerData data = Players.Get(i);
+            if (!activePlayers.Contains(data.Player))
+            {
+                Debug.Log($"[LobbyManager] Removing stale player entry: {data.Player}");
+                Players.Remove(data);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            PlayersVersion++;
         }
     }
 

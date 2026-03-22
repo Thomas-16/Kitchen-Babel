@@ -29,7 +29,26 @@ public class StoveCounter : BaseCounter, IHasProgress
 
     public override void Spawned(){
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        NetworkedState = (int)State.Idle;
+        // Don't reset NetworkedState — defaults to 0 (Idle) on fresh start,
+        // and is restored from snapshot during host migration.
+
+        // Restore non-networked recipe caches from current state (needed after host migration)
+        RestoreRecipeCaches();
+    }
+
+    private void RestoreRecipeCaches()
+    {
+        if (!HasKitchenObject()) return;
+
+        State currentState = (State)NetworkedState;
+        if (currentState == State.Frying)
+        {
+            fryingRecipeSO = GetFryingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+        }
+        else if (currentState == State.Fried)
+        {
+            burningRecipeSO = GetBurningRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+        }
     }
 
     public override void Render(){

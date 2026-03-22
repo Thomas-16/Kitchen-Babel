@@ -23,6 +23,7 @@ public class KitchenGameManager : NetworkBehaviour
     [Networked] public float CountdownTimer { get; set; }
     [Networked] public float GamePlayingTimer { get; set; }
     [Networked] public NetworkBool IsPaused { get; set; }
+    [Networked] private NetworkBool IsInitialized { get; set; }
 
     private float gamePlayingTimerMax = 60f;
     private ChangeDetector changeDetector;
@@ -37,9 +38,12 @@ public class KitchenGameManager : NetworkBehaviour
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
         OnInstanceReady?.Invoke(this, EventArgs.Empty);
 
-        if(HasStateAuthority){
+        // Only initialize state on fresh game start, not during host migration
+        // (during migration, [Networked] properties are already restored from snapshot)
+        if(HasStateAuthority && !IsInitialized){
             NetworkedState = (int)State.WaitingToStart;
             CountdownTimer = 3f;
+            IsInitialized = true;
         }
 
         // Only host listens to pause input
