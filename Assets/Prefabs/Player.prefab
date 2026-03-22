@@ -128,12 +128,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Fusion.Unity::Fusion.NetworkCharacterController
   _stateAuthorityChangeErrorCorrectionDelta: 0
-  gravity: -20
+  gravity: -10
   jumpImpulse: 8
   acceleration: 100
   braking: 100
   maxSpeed: 7
   rotationSpeed: 10
+  lockYPosition: 1
 --- !u!1 &3864425327307184321
 GameObject:
   m_ObjectHideFlags: 0

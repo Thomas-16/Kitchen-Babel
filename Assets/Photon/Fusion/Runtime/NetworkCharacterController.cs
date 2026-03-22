@@ -46,11 +46,18 @@ namespace Fusion {
     public float maxSpeed      = 2.0f;
     public float rotationSpeed = 15.0f;
 
+    [Header("Client-Authoritative Settings")]
+    public bool lockYPosition = false;
+
     Tick                _initial;
     CharacterController _controller;
     Vector3             _clientPos;
     Quaternion          _clientRot;
     bool                _clientInitialized;
+    float               _spawnY;
+    Vector3             _smoothPos;
+    Quaternion          _smoothRot;
+    bool                _smoothInitialized;
 
     public Vector3 Velocity {
       get => Data.Velocity;
@@ -78,6 +85,7 @@ namespace Fusion {
     }
 
     public void SetPosition(Vector3 position, Quaternion rotation) {
+      if (lockYPosition) position.y = _spawnY;
       _controller.enabled = false;
       transform.SetPositionAndRotation(position, rotation);
       _controller.enabled = true;
@@ -121,12 +129,19 @@ namespace Fusion {
 
       _controller.Move(moveVelocity * deltaTime);
 
+      if (lockYPosition) {
+        var pos = transform.position;
+        pos.y = _spawnY;
+        transform.position = pos;
+      }
+
       Data.Velocity = (transform.position - previousPos) * Runner.TickRate;
       Data.Grounded = _controller.isGrounded;
 
       // Save client's simulation result from forward ticks
       if (isLocalForward) {
         _clientPos = transform.position;
+        if (lockYPosition) _clientPos.y = _spawnY;
         _clientRot = transform.rotation;
         _clientInitialized = true;
       }
@@ -135,6 +150,8 @@ namespace Fusion {
     public override void Spawned() {
       _initial = default;
       _clientInitialized = false;
+      _smoothInitialized = false;
+      _spawnY = transform.position.y;
       TryGetComponent(out _controller);
       // Without disabling and re-enabling the CharacterController here, the first Move call will reset the position to 0,0,0 instead of
       // keeping the position it was spawned at. Presumably disabling it clears some kind of internally cached "previous position" value
@@ -144,7 +161,7 @@ namespace Fusion {
     }
 
     public override void Render() {
-      // Client-authoritative: show the client's own accumulated position
+      // Client-authoritative: local player uses own simulation position
       if (!Runner.IsServer && Object.HasInputAuthority && _clientInitialized) {
         _controller.enabled = false;
         transform.SetPositionAndRotation(_clientPos, _clientRot);
@@ -153,6 +170,23 @@ namespace Fusion {
       }
 
       NetworkTRSP.Render(this, transform, false, false, false, ref _initial);
+
+      // Smooth remote player rendering to absorb network jitter
+      if (!Object.HasInputAuthority) {
+        if (!_smoothInitialized) {
+          _smoothPos = transform.position;
+          _smoothRot = transform.rotation;
+          _smoothInitialized = true;
+        }
+
+        float t = 1f - Mathf.Exp(-20f * Time.deltaTime);
+        _smoothPos = Vector3.Lerp(_smoothPos, transform.position, t);
+        _smoothRot = Quaternion.Slerp(_smoothRot, transform.rotation, t);
+
+        _controller.enabled = false;
+        transform.SetPositionAndRotation(_smoothPos, _smoothRot);
+        _controller.enabled = true;
+      }
     }
 
     void IBeforeAllTicks.BeforeAllTicks(bool resimulation, int tickCount) {
