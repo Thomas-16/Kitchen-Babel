@@ -51,6 +51,11 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         }
 
         if(GetInput(out PlayerNetworkInput input)){
+            // Host: override remote player position with client's reported position
+            if(HasStateAuthority && !HasInputAuthority && input.position.sqrMagnitude > 0f){
+                networkController.SetPosition(input.position, input.rotation);
+            }
+
             HandleMovement(input);
 
             // Only run raycasts on forward ticks, not during resimulation.

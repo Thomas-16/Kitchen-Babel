@@ -77,6 +77,12 @@ namespace Fusion {
       }
     }
 
+    public void SetPosition(Vector3 position, Quaternion rotation) {
+      _controller.enabled = false;
+      transform.SetPositionAndRotation(position, rotation);
+      _controller.enabled = true;
+    }
+
     public void Move(Vector3 direction) {
       var deltaTime = Runner.DeltaTime;
 

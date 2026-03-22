@@ -84,6 +84,11 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
             playerInput.buttons.Set(InputButton.InteractAlternate, true);
         }
 
+        if(Player.LocalInstance != null){
+            playerInput.position = Player.LocalInstance.transform.position;
+            playerInput.rotation = Player.LocalInstance.transform.rotation;
+        }
+
         input.Set(playerInput);
     }
 
