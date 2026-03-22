@@ -15,5 +15,6 @@ Kitchen Babel is a multiplayer co-op cooking/time-management game built in **Uni
 - **Input**: `PlayerInputActions` is auto-generated — don't edit manually. `GameInput.cs` handles rebinding.
 
 ### Notes to Claude
-- You can always tell me to do anything in the Unity Editor like creating GameObjects/Prefabs, adding compoonents, etc.
+- You can always tell the user to do anything in the Unity Editor like creating GameObjects/Prefabs, adding compoonents, etc.
 - You can use the Unity MCP.
+- Asking the user clarifying questions and design choice questions with the ask question tool is a great idea before planning.
