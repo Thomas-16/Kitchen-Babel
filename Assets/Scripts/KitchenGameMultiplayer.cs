@@ -86,6 +86,7 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player){
         if (!runner.IsServer) return;
+        Debug.Log($"[KGM] OnPlayerLeft: {player}");
 
         // Despawn any kitchen object held by the leaving player before Fusion auto-despawns them
         foreach (NetworkObject networkObject in runner.GetAllNetworkObjects())

@@ -265,6 +265,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
+        Debug.Log($"[NRM] OnPlayerLeft: {player}, IsServer={runner.IsServer}");
         if (runner.IsServer && LobbyManager.Instance != null)
         {
             LobbyManager.Instance.RemovePlayer(player);
@@ -290,6 +291,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
+        Debug.Log($"[NRM] OnShutdown: reason={shutdownReason}, isMigrating={isMigrating}");
         if (shutdownReason == ShutdownReason.HostMigration) return;
 
         if (isMigrating) return;
@@ -302,6 +304,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
+        Debug.Log($"[NRM] OnDisconnectedFromServer: reason={reason}, isMigrating={isMigrating}");
         if (isMigrating)
         {
             Debug.Log("[NetworkRunnerManager] OnDisconnectedFromServer during migration — ignoring.");
