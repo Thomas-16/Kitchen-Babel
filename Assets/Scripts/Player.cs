@@ -51,12 +51,14 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         }
 
         if(GetInput(out PlayerNetworkInput input)){
-            // Host: override remote player position with client's reported position
+            // Host: for remote players, accept the client-reported pose and skip
+            // simulating another movement step on top of it.
             if(HasStateAuthority && !HasInputAuthority && input.position.sqrMagnitude > 0f){
                 networkController.SetPosition(input.position, input.rotation);
+                IsWalking = input.moveDirection != Vector2.zero;
+            } else {
+                HandleMovement(input);
             }
-
-            HandleMovement(input);
 
             // Only run raycasts on forward ticks, not during resimulation.
             // Physics state isn't rewound during resim, so raycasts return
