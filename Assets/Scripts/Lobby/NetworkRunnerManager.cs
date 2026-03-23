@@ -16,6 +16,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action OnJoinedSession;
     public event Action<string> OnJoinFailed;
     public event Action OnDisconnected;
+    public event Action OnReturnedToLobby;
 
     public NetworkRunner Runner { get; private set; }
     public List<SessionInfo> CachedSessionList { get; private set; } = new List<SessionInfo>();
@@ -24,6 +25,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private bool pendingLobbyManagerSpawn;
     private bool isMigrating;
+    private bool isReturningToLobby;
 
     private async Task ShutdownRunner()
     {
@@ -216,6 +218,15 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         Runner.LoadScene(sceneRef);
     }
 
+    public void ReturnToLobby()
+    {
+        if (Runner == null || !Runner.IsServer || isReturningToLobby) return;
+        isReturningToLobby = true;
+
+        SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity"));
+        Runner.LoadScene(sceneRef);
+    }
+
     public void KickPlayer(PlayerRef player)
     {
         if (Runner != null && Runner.IsServer)
@@ -286,6 +297,23 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             {
                 KitchenGameManager.Instance.TryStartGame();
             }
+            else if (LobbyManager.Instance == null)
+            {
+                // Returned to MainMenuScene from a game — LobbyManager was despawned during scene load
+                // Re-spawn it; Spawned() will re-add the host and active players will be re-added via OnPlayerJoined
+                runner.Spawn(lobbyManagerPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer);
+            }
+            else
+            {
+                LobbyManager.Instance.ResetReadyStates();
+            }
+        }
+
+        // Fire on all clients when returning to lobby (no KitchenGameManager means we're in MainMenuScene)
+        if (KitchenGameManager.Instance == null && LobbyManager.Instance != null)
+        {
+            isReturningToLobby = false;
+            OnReturnedToLobby?.Invoke();
         }
     }
 

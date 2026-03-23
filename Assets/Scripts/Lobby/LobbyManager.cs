@@ -31,7 +31,11 @@ public class LobbyManager : NetworkBehaviour
             // Remove stale player entries from the old host or disconnected players
             RemoveStalePlayerEntries();
 
-            AddPlayer(Runner.LocalPlayer);
+            // Add all active players (covers both fresh start and return-from-game)
+            foreach (PlayerRef player in Runner.ActivePlayers)
+            {
+                AddPlayer(player);
+            }
         }
     }
 
@@ -141,6 +145,22 @@ public class LobbyManager : NetworkBehaviour
                 return;
             }
         }
+    }
+
+    public void ResetReadyStates()
+    {
+        if (!HasStateAuthority) return;
+
+        for (int i = 0; i < Players.Count; i++)
+        {
+            LobbyPlayerData data = Players.Get(i);
+            if (data.IsReady)
+            {
+                data.IsReady = false;
+                Players.Set(i, data);
+            }
+        }
+        PlayersVersion++;
     }
 
     public bool AreAllPlayersReady()

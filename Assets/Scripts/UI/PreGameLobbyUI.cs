@@ -18,11 +18,16 @@ public class PreGameLobbyUI : MonoBehaviour
         NetworkRunnerManager.Instance.OnDisconnected += HandleDisconnected;
     }
 
+    private void OnEnable()
+    {
+        hasSetName = false;
+        lastSeenVersion = -1;
+    }
+
     private void Update()
     {
         if (LobbyManager.Instance == null)
         {
-            // Debug.Log("[PreGameLobbyUI] Update: LobbyManager.Instance is NULL");
             return;
         }
 
@@ -49,7 +54,9 @@ public class PreGameLobbyUI : MonoBehaviour
     private void OnDestroy()
     {
         if (NetworkRunnerManager.Instance != null)
+        {
             NetworkRunnerManager.Instance.OnDisconnected -= HandleDisconnected;
+        }
     }
 
     private void HandleDisconnected()

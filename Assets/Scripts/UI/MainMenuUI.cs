@@ -8,6 +8,7 @@ public class MainMenuUI : MonoBehaviour
 {
     [SerializeField] private ModalWindowManager inputNameModal;
     [SerializeField] private ModalWindowManager roomBrowserModal;
+    [SerializeField] private ModalWindowManager preGameLobbyModal;
     [SerializeField] private TMP_InputField nameInputField;
     [SerializeField] private TextMeshProUGUI usernameDisplayText;
     [SerializeField] private GameObject invalidNameText;
@@ -15,6 +16,7 @@ public class MainMenuUI : MonoBehaviour
     private const string PLAYER_NAME_KEY = "PlayerName";
 
     private Coroutine invalidNameCoroutine;
+    private bool returningFromGame;
 
     private void Awake()
     {
@@ -22,7 +24,14 @@ public class MainMenuUI : MonoBehaviour
 
         if (NetworkRunnerManager.Instance != null)
         {
-            NetworkRunnerManager.Instance.JoinLobby();
+            if (NetworkRunnerManager.Instance.Runner != null && NetworkRunnerManager.Instance.Runner.IsRunning)
+            {
+                returningFromGame = true;
+            }
+            else
+            {
+                NetworkRunnerManager.Instance.JoinLobby();
+            }
         }
 
         string savedName = PlayerPrefs.GetString(PLAYER_NAME_KEY, "");
@@ -34,6 +43,14 @@ public class MainMenuUI : MonoBehaviour
         if (invalidNameText != null)
         {
             invalidNameText.SetActive(false);
+        }
+    }
+
+    private void Start()
+    {
+        if (returningFromGame && preGameLobbyModal != null)
+        {
+            preGameLobbyModal.OpenWindow();
         }
     }
 

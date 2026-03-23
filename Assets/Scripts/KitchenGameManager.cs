@@ -24,8 +24,10 @@ public class KitchenGameManager : NetworkBehaviour
     [Networked] public float GamePlayingTimer { get; set; }
     [Networked] public NetworkBool IsPaused { get; set; }
     [Networked] private NetworkBool IsInitialized { get; set; }
+    [Networked] private float ReturnToLobbyTimer { get; set; }
 
-    private float gamePlayingTimerMax = 60f;
+    private float gamePlayingTimerMax = 5f;
+    private float returnToLobbyDelay = 5f;
     private ChangeDetector changeDetector;
     private bool localIsPaused;
 
@@ -92,9 +94,14 @@ public class KitchenGameManager : NetworkBehaviour
                 GamePlayingTimer -= Runner.DeltaTime;
                 if(GamePlayingTimer < 0){
                     NetworkedState = (int)State.GameOver;
+                    ReturnToLobbyTimer = returnToLobbyDelay;
                 }
                 break;
             case State.GameOver:
+                ReturnToLobbyTimer -= Runner.DeltaTime;
+                if(ReturnToLobbyTimer < 0){
+                    NetworkRunnerManager.Instance.ReturnToLobby();
+                }
                 break;
         }
     }
