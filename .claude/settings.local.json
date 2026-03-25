@@ -18,7 +18,8 @@
       "WebFetch(domain:doc-api.photonengine.com)",
       "Bash(python3:*)",
       "Bash(curl -s https://doc.photonengine.com/fusion/current/manual/state/host-migration)",
-      "Bash(curl -s https://doc.photonengine.com/fusion/v2/manual/state/host-migration)"
+      "Bash(curl -s https://doc.photonengine.com/fusion/v2/manual/state/host-migration)",
+      "mcp__UnityMCP__manage_gameobject"
     ]
   }
 }
