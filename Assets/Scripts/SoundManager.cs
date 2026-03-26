@@ -1,20 +1,16 @@
 using UnityEngine;
+using UnityEngine.Audio;
 using System;
 
 public class SoundManager : MonoBehaviour
 {
-    private const string PLAYER_PREFS_SOUND_EFFECTS_VOLUME = "SoundEffectsVolume";
-
     public static SoundManager Instance {get; private set;}
 
     [SerializeField] private AudioClipRefsSO audioClipRefsSO;
-
-    private float volume = .8f;
+    [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
     private void Awake() {
         Instance = this;
-
-        volume = PlayerPrefs.GetFloat(PLAYER_PREFS_SOUND_EFFECTS_VOLUME, volume);
     }
     private void Start() {
         DeliveryManager.OnInstanceReady += DeliveryManager_OnInstanceReady;
@@ -58,11 +54,22 @@ public class SoundManager : MonoBehaviour
         DeliveryCounter deliveryCounter = DeliveryCounter.Instance;
         PlaySound(audioClipRefsSO.deliverySuccess, deliveryCounter.transform.position);
     }
-    private void PlaySound(AudioClip[] audioClipArray, Vector3 position, float volume = 1f){
-        PlaySound(audioClipArray[UnityEngine.Random.Range(0,audioClipArray.Length)], position, volume);
+    private void PlaySound(AudioClip[] audioClipArray, Vector3 position, float volumeMultiplier = 1f){
+        PlaySound(audioClipArray[UnityEngine.Random.Range(0,audioClipArray.Length)], position, volumeMultiplier);
     }
     private void PlaySound(AudioClip audioClip, Vector3 position, float volumeMultiplier = 1f){
-        AudioSource.PlayClipAtPoint(audioClip, position, volumeMultiplier * this.volume);
+        GameObject soundObject = new GameObject("SFX_OneShot");
+        soundObject.transform.position = position;
+        AudioSource source = soundObject.AddComponent<AudioSource>();
+        source.clip = audioClip;
+        source.volume = volumeMultiplier;
+        source.spatialBlend = 1f;
+        if (sfxMixerGroup != null)
+        {
+            source.outputAudioMixerGroup = sfxMixerGroup;
+        }
+        source.Play();
+        Destroy(soundObject, audioClip.length + 0.1f);
     }
 
     public void PlayFootstepSound(Vector3 position, float volume){
@@ -73,16 +80,5 @@ public class SoundManager : MonoBehaviour
     }
     public void PlayWarningSound(Vector3 position){
         PlaySound(audioClipRefsSO.warning, position);
-    }
-
-    public void ChangeVolume(){
-        volume += .1f;
-        if(volume > 1.05f) volume = 0f;
-
-        PlayerPrefs.SetFloat(PLAYER_PREFS_SOUND_EFFECTS_VOLUME, volume);
-        PlayerPrefs.Save();
-    }
-    public float GetVolume(){
-        return volume;
     }
 }
