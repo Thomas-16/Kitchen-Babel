@@ -13,8 +13,9 @@ public class LobbyManager : NetworkBehaviour
 
     public event Action OnPlayersChanged;
 
-    // Static snapshot of player colors — survives scene transitions where LobbyManager is despawned
+    // Static snapshots — survive scene transitions where LobbyManager is despawned
     private static Dictionary<PlayerRef, int> cachedPlayerColors = new Dictionary<PlayerRef, int>();
+    private static Dictionary<PlayerRef, string> cachedPlayerNames = new Dictionary<PlayerRef, string>();
 
     private ChangeDetector changeDetector;
     private int playerJoinCounter;
@@ -167,12 +168,21 @@ public class LobbyManager : NetworkBehaviour
         return 0;
     }
 
+    public static string GetCachedPlayerName(PlayerRef player)
+    {
+        if (cachedPlayerNames.TryGetValue(player, out string name))
+            return name;
+        return "";
+    }
+
     public void SnapshotPlayerColors()
     {
         cachedPlayerColors.Clear();
+        cachedPlayerNames.Clear();
         foreach (LobbyPlayerData data in Players)
         {
             cachedPlayerColors[data.Player] = data.ColorIndex;
+            cachedPlayerNames[data.Player] = data.PlayerName.ToString();
         }
     }
 

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class LookAtCamera : MonoBehaviour
@@ -13,7 +11,14 @@ public class LookAtCamera : MonoBehaviour
 
     [SerializeField] private Mode mode;
 
+    [Header("Axis Locks")]
+    [SerializeField] private bool lockX;
+    [SerializeField] private bool lockY;
+    [SerializeField] private bool lockZ;
+
     private void LateUpdate() {
+        Quaternion originalRotation = transform.rotation;
+
         switch(mode){
             case Mode.Lookat:
                 transform.LookAt(Camera.main.transform);
@@ -28,6 +33,15 @@ public class LookAtCamera : MonoBehaviour
             case Mode.CameraForwardInverted:
                 transform.forward = -Camera.main.transform.forward;
                 break;
+        }
+
+        if (lockX || lockY || lockZ) {
+            Vector3 euler = transform.eulerAngles;
+            Vector3 originalEuler = originalRotation.eulerAngles;
+            if (lockX) euler.x = originalEuler.x;
+            if (lockY) euler.y = originalEuler.y;
+            if (lockZ) euler.z = originalEuler.z;
+            transform.eulerAngles = euler;
         }
     }
 }
