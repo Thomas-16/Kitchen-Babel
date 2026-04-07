@@ -214,6 +214,11 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (Runner == null || !Runner.IsServer) return;
 
+        if (LobbyManager.Instance != null)
+        {
+            LobbyManager.Instance.SnapshotPlayerColors();
+        }
+
         SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/GameScene.unity"));
         Runner.LoadScene(sceneRef);
     }

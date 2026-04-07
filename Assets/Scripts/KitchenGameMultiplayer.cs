@@ -41,7 +41,14 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
                 int spawnIndex = player.AsIndex % spawnPositions.Count;
                 Transform spawnPoint = spawnPositions[spawnIndex];
                 Debug.Log($"[KGM] Spawning player prefab for {player} at index {spawnIndex}, pos={spawnPoint.position}");
-                Runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player);
+                PlayerRef capturedPlayer = player;
+                Runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player,
+                    (runner, obj) =>
+                    {
+                        int colorIndex = LobbyManager.GetCachedPlayerColorIndex(capturedPlayer);
+                        obj.GetComponent<Player>().ColorIndex = colorIndex;
+                    }
+                );
             }
         }
     }
@@ -80,7 +87,13 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
             int spawnIndex = player.AsIndex % spawnPositions.Count;
             Transform spawnPoint = spawnPositions[spawnIndex];
 
-            NetworkObject playerNetworkObject = runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player);
+            NetworkObject playerNetworkObject = runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player,
+                (runner, obj) =>
+                {
+                    int colorIndex = LobbyManager.GetCachedPlayerColorIndex(player);
+                    obj.GetComponent<Player>().ColorIndex = colorIndex;
+                }
+            );
         }
     }
 

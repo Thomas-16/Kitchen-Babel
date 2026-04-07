@@ -13,6 +13,9 @@ public class LobbyManager : NetworkBehaviour
 
     public event Action OnPlayersChanged;
 
+    // Static snapshot of player colors — survives scene transitions where LobbyManager is despawned
+    private static Dictionary<PlayerRef, int> cachedPlayerColors = new Dictionary<PlayerRef, int>();
+
     private ChangeDetector changeDetector;
     private int playerJoinCounter;
 
@@ -93,7 +96,8 @@ public class LobbyManager : NetworkBehaviour
         {
             Player = player,
             PlayerName = $"Player {playerJoinCounter}",
-            IsReady = false
+            IsReady = false,
+            ColorIndex = Mathf.Clamp(Players.Count, 0, 5)
         };
         Players.Add(playerData);
         PlayersVersion++;
@@ -128,6 +132,47 @@ public class LobbyManager : NetworkBehaviour
                 PlayersVersion++;
                 return;
             }
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_SetPlayerColor(PlayerRef player, int colorIndex)
+    {
+        for (int i = 0; i < Players.Count; i++)
+        {
+            if (Players.Get(i).Player == player)
+            {
+                LobbyPlayerData data = Players.Get(i);
+                data.ColorIndex = colorIndex;
+                Players.Set(i, data);
+                PlayersVersion++;
+                return;
+            }
+        }
+    }
+
+    public int GetPlayerColorIndex(PlayerRef player)
+    {
+        foreach (LobbyPlayerData data in Players)
+        {
+            if (data.Player == player) return data.ColorIndex;
+        }
+        return 0;
+    }
+
+    public static int GetCachedPlayerColorIndex(PlayerRef player)
+    {
+        if (cachedPlayerColors.TryGetValue(player, out int colorIndex))
+            return colorIndex;
+        return 0;
+    }
+
+    public void SnapshotPlayerColors()
+    {
+        cachedPlayerColors.Clear();
+        foreach (LobbyPlayerData data in Players)
+        {
+            cachedPlayerColors[data.Player] = data.ColorIndex;
         }
     }
 

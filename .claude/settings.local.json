@@ -20,7 +20,9 @@
       "Bash(curl -s https://doc.photonengine.com/fusion/current/manual/state/host-migration)",
       "Bash(curl -s https://doc.photonengine.com/fusion/v2/manual/state/host-migration)",
       "mcp__UnityMCP__manage_gameobject",
-      "mcp__UnityMCP__manage_asset"
+      "mcp__UnityMCP__manage_asset",
+      "Bash(xargs ls:*)",
+      "Bash(ls -la Assets/Scripts/*.cs)"
     ]
   }
 }

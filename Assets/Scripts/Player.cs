@@ -21,6 +21,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     [SerializeField] private NetworkCharacterController networkController;
 
     [Networked] public NetworkBool IsWalking { get; set; }
+    [Networked] public int ColorIndex { get; set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
 
     private Vector3 lastInteractDir;

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9683fa00481282d4b9afa5b52def9fae, type: 3}
+  m_Name: PlayerColorDataSO
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerColorDataSO
+  colors:
+  - colorName: Yellow
+    bodyMaterial: {fileID: 2100000, guid: dba792b574c201a4eabfe983aa82805a, type: 2}
+    previewSprite: {fileID: 21300000, guid: 0ba782f3738b0c140a8645668d6e21f2, type: 3}
+    tintColor: {r: 1, g: 0.6976403, b: 0, a: 1}
+  - colorName: Red
+    bodyMaterial: {fileID: 2100000, guid: 5ab04d90f9e9cd646a3bd2193331a761, type: 2}
+    previewSprite: {fileID: 21300000, guid: d70f3817b216bcc4ebed347b7c0dc828, type: 3}
+    tintColor: {r: 1, g: 0.1618318, b: 0, a: 1}
+  - colorName: Green
+    bodyMaterial: {fileID: 2100000, guid: 353eec077b4390b43aab98adeac15a1e, type: 2}
+    previewSprite: {fileID: 21300000, guid: e67663241ff8e0744893d8b00fb77d20, type: 3}
+    tintColor: {r: 0, g: 1, b: 0.015725613, a: 1}
+  - colorName: Blue
+    bodyMaterial: {fileID: 2100000, guid: ead4e305e7c244b418af43ccfd3c5aac, type: 2}
+    previewSprite: {fileID: 21300000, guid: dab5e6f66c0218b42b05e45ad4b00c61, type: 3}
+    tintColor: {r: 0, g: 0.60255337, b: 1, a: 1}
+  - colorName: Brown
+    bodyMaterial: {fileID: 2100000, guid: 9ead4b755afa96241a4bb13f43712503, type: 2}
+    previewSprite: {fileID: 21300000, guid: 5f265092dcc05f747af1ed485531cd60, type: 3}
+    tintColor: {r: 0.2981131, g: 0.058801387, b: 0, a: 1}
+  - colorName: Pink
+    bodyMaterial: {fileID: 2100000, guid: 028e0dc1c3b653a45b58aef4d6528a83, type: 2}
+    previewSprite: {fileID: 21300000, guid: f82c1b43e93d7d6469a4b959ea6a008a, type: 3}
+    tintColor: {r: 1, g: 0.47358483, b: 1, a: 1}

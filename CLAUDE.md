@@ -12,9 +12,10 @@ Kitchen Babel is a multiplayer co-op cooking/time-management game built in **Uni
 - **Singletons**: `KitchenGameManager`, `DeliveryManager`, `KitchenGameMultiplayer` set `Instance` in `Spawned()` and fire `OnInstanceReady`. `GameInput` wraps the New Input System (local only).
 - **Counters**: All inherit `BaseCounter`, override `Interact()` and `InteractAlternate()`. Each has companion `*Visual.cs`/`*Sound.cs`.
 - **Data**: ScriptableObjects in `Assets/Scriptable Objects/` — `KitchenObjectSO`, `RecipeSO`, `CuttingRecipeSO`, `FryingRecipeSO`, `BurningRecipeSO`.
-- **Input**: `PlayerInputActions` is auto-generated — don't edit manually. `GameInput.cs` handles rebinding.
+- **Input**: `PlayerInputActions` is auto-generated — don't edit manually.
 
 ### Notes to Claude
 - You can always tell the user to do anything in the Unity Editor like creating GameObjects/Prefabs, adding compoonents, etc.
 - You can use the Unity MCP.
+- If necessary for the task, you should launch an agent during the explore phase to just use the MCP to thoroughly investigate.
 - Asking the user clarifying questions and design choice questions with the ask question tool is a great idea before planning.
