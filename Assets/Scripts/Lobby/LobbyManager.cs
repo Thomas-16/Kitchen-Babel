@@ -8,7 +8,7 @@ public class LobbyManager : NetworkBehaviour
 {
     public static LobbyManager Instance { get; private set; }
 
-    [Networked, Capacity(4)] public NetworkLinkedList<LobbyPlayerData> Players => default;
+    [Networked, Capacity(6)] public NetworkLinkedList<LobbyPlayerData> Players => default;
     [Networked] public int PlayersVersion { get; set; }
 
     public event Action OnPlayersChanged;
