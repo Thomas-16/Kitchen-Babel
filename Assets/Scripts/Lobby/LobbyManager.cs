@@ -19,6 +19,7 @@ public class LobbyManager : NetworkBehaviour
 
     private ChangeDetector changeDetector;
     private int playerJoinCounter;
+    private bool needsDeferredSync;
 
     public override void Spawned()
     {
@@ -40,6 +41,23 @@ public class LobbyManager : NetworkBehaviour
             {
                 AddPlayer(player);
             }
+
+            needsDeferredSync = true;
+        }
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!HasStateAuthority) return;
+        if (!needsDeferredSync) return;
+        needsDeferredSync = false;
+
+        // Re-sync one tick after Spawned() to catch any OnPlayerLeft/OnPlayerJoined
+        // callbacks that fired while LobbyManager.Instance was null during scene transition
+        RemoveStalePlayerEntries();
+        foreach (PlayerRef player in Runner.ActivePlayers)
+        {
+            AddPlayer(player);
         }
     }
 

@@ -22,7 +22,10 @@
       "mcp__UnityMCP__manage_gameobject",
       "mcp__UnityMCP__manage_asset",
       "Bash(xargs ls:*)",
-      "Bash(ls -la Assets/Scripts/*.cs)"
+      "Bash(ls -la Assets/Scripts/*.cs)",
+      "Bash(curl -s \"https://doc.photonengine.com/fusion/current/manual/connection-and-matchmaking/connection-lifecycle\")",
+      "Bash(curl -s \"https://doc.photonengine.com/fusion/current/manual/connection-and-matchmaking/runner\")",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

@@ -34,6 +34,12 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         OnAnyPickedSomething = null;
     }
 
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (LocalInstance == this)
+            LocalInstance = null;
+    }
+
     public override void Spawned(){
         Debug.Log($"[Player] Spawned! HasInputAuthority={HasInputAuthority}, HasStateAuthority={HasStateAuthority}, InputAuthority={Object.InputAuthority}");
         if(HasInputAuthority){
