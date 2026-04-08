@@ -122,6 +122,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             {
                 sessionProps["pw"] = 0;
             }
+            sessionProps["gs"] = 0;
 
             NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
@@ -219,6 +220,8 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             LobbyManager.Instance.SnapshotPlayerColors();
         }
 
+        SetGameInSession(true);
+
         SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/GameScene.unity"));
         Runner.LoadScene(sceneRef);
     }
@@ -261,6 +264,26 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             return (int)pwProp != 0;
         }
         return false;
+    }
+
+    public bool SessionIsInGame(SessionInfo session)
+    {
+        if (session.Properties.TryGetValue("gs", out SessionProperty gsProp))
+        {
+            return (int)gsProp != 0;
+        }
+        return false;
+    }
+
+    private void SetGameInSession(bool inSession)
+    {
+        if (Runner != null && Runner.IsServer)
+        {
+            Runner.SessionInfo.UpdateCustomProperties(new Dictionary<string, SessionProperty>
+            {
+                { "gs", inSession ? 1 : 0 }
+            });
+        }
     }
 
     // INetworkRunnerCallbacks
@@ -317,6 +340,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         // Fire on all clients when returning to lobby (no KitchenGameManager means we're in MainMenuScene)
         if (KitchenGameManager.Instance == null && LobbyManager.Instance != null)
         {
+            if (runner.IsServer)
+            {
+                SetGameInSession(false);
+            }
             isReturningToLobby = false;
             OnReturnedToLobby?.Invoke();
         }

@@ -21,10 +21,12 @@ public class RoomEntryUI : MonoBehaviour
         roomNameText.text = session.Name;
         bool isPrivate = NetworkRunnerManager.Instance.SessionHasPassword(session);
         string privacyLabel = isPrivate ? "Private" : "Public";
-        playerCountText.text = $"{privacyLabel} | Player Count: {session.PlayerCount}/{session.MaxPlayers}";
+        bool isInGame = NetworkRunnerManager.Instance.SessionIsInGame(session);
+        string inGameLabel = isInGame ? " -- Game In Session" : "";
+        playerCountText.text = $"{privacyLabel} | Player Count: {session.PlayerCount}/{session.MaxPlayers}{inGameLabel}";
 
-        // Start with join visible, pw + confirm hidden
-        if (joinButtonObject != null) joinButtonObject.SetActive(true);
+        // Start with join visible, pw + confirm hidden (disabled if game in session)
+        if (joinButtonObject != null) joinButtonObject.SetActive(!isInGame);
         if (passwordInputField != null) passwordInputField.gameObject.SetActive(false);
         if (confirmButtonObject != null) confirmButtonObject.SetActive(false);
     }
