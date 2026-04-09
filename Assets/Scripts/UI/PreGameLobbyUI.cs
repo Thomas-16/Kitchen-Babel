@@ -11,6 +11,7 @@ public class PreGameLobbyUI : MonoBehaviour
     [SerializeField] private ModalWindowManager preGameLobbyModal;
     [SerializeField] private ModalWindowManager roomBrowserModal;
     [SerializeField] private Image characterPreviewImage;
+    [SerializeField] private HorizontalSelector colorSelector;
     [SerializeField] private PlayerColorDataSO playerColorDataSO;
 
     private const string ColorPrefsKey = "HorizontalSelector_PlayerColor";
@@ -59,6 +60,24 @@ public class PreGameLobbyUI : MonoBehaviour
         Debug.Log($"[PreGameLobbyUI] Version changed: {lastSeenVersion} -> {LobbyManager.Instance.PlayersVersion}");
         lastSeenVersion = LobbyManager.Instance.PlayersVersion;
         RefreshPlayerList();
+        SyncLocalColorSelector();
+    }
+
+    private void SyncLocalColorSelector()
+    {
+        if (colorSelector == null || LobbyManager.Instance == null) return;
+
+        NetworkRunner runner = NetworkRunnerManager.Instance.Runner;
+        if (runner == null) return;
+
+        int serverColor = LobbyManager.Instance.GetPlayerColorIndex(runner.LocalPlayer);
+        if (colorSelector.index != serverColor)
+        {
+            colorSelector.index = serverColor;
+            colorSelector.UpdateUI();
+            UpdatePreviewImage(serverColor);
+            PlayerPrefs.SetInt(ColorPrefsKey, serverColor);
+        }
     }
 
     private void OnDestroy()
@@ -138,13 +157,29 @@ public class PreGameLobbyUI : MonoBehaviour
 
     public void OnColorChanged(int index)
     {
+        if (LobbyManager.Instance != null && colorSelector != null)
+        {
+            NetworkRunner runner = NetworkRunnerManager.Instance.Runner;
+            if (runner != null)
+            {
+                PlayerRef localPlayer = runner.LocalPlayer;
+                if (LobbyManager.Instance.IsColorTaken(index, localPlayer))
+                {
+                    index = LobbyManager.Instance.GetNextAvailableColor(index + 1, localPlayer);
+                    colorSelector.index = index;
+                    colorSelector.UpdateUI();
+                }
+            }
+        }
+
         UpdatePreviewImage(index);
+        PlayerPrefs.SetInt(ColorPrefsKey, index);
 
         if (LobbyManager.Instance == null) return;
-        NetworkRunner runner = NetworkRunnerManager.Instance.Runner;
-        if (runner != null)
+        NetworkRunner r = NetworkRunnerManager.Instance.Runner;
+        if (r != null)
         {
-            LobbyManager.Instance.RPC_SetPlayerColor(runner.LocalPlayer, index);
+            LobbyManager.Instance.RPC_SetPlayerColor(r.LocalPlayer, index);
         }
     }
 

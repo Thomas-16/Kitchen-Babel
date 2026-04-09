@@ -116,7 +116,7 @@ public class LobbyManager : NetworkBehaviour
             Player = player,
             PlayerName = $"Player {playerJoinCounter}",
             IsReady = false,
-            ColorIndex = Mathf.Clamp(Players.Count, 0, 5)
+            ColorIndex = GetNextAvailableColor(Players.Count % 6, player)
         };
         Players.Add(playerData);
         PlayersVersion++;
@@ -157,6 +157,11 @@ public class LobbyManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_SetPlayerColor(PlayerRef player, int colorIndex)
     {
+        if (IsColorTaken(colorIndex, player))
+        {
+            colorIndex = GetNextAvailableColor(colorIndex + 1, player);
+        }
+
         for (int i = 0; i < Players.Count; i++)
         {
             if (Players.Get(i).Player == player)
@@ -168,6 +173,28 @@ public class LobbyManager : NetworkBehaviour
                 return;
             }
         }
+    }
+
+    public bool IsColorTaken(int colorIndex, PlayerRef excludePlayer)
+    {
+        foreach (LobbyPlayerData data in Players)
+        {
+            if (data.Player != excludePlayer && data.ColorIndex == colorIndex)
+                return true;
+        }
+        return false;
+    }
+
+    public int GetNextAvailableColor(int startIndex, PlayerRef excludePlayer)
+    {
+        int colorCount = 6;
+        for (int i = 0; i < colorCount; i++)
+        {
+            int candidate = (startIndex + i) % colorCount;
+            if (!IsColorTaken(candidate, excludePlayer))
+                return candidate;
+        }
+        return startIndex;
     }
 
     public int GetPlayerColorIndex(PlayerRef player)
