@@ -197,6 +197,18 @@ public class LobbyManager : NetworkBehaviour
         return startIndex;
     }
 
+    public int GetPrevAvailableColor(int startIndex, PlayerRef excludePlayer)
+    {
+        int colorCount = 6;
+        for (int i = 0; i < colorCount; i++)
+        {
+            int candidate = ((startIndex - i) % colorCount + colorCount) % colorCount;
+            if (!IsColorTaken(candidate, excludePlayer))
+                return candidate;
+        }
+        return startIndex;
+    }
+
     public int GetPlayerColorIndex(PlayerRef player)
     {
         foreach (LobbyPlayerData data in Players)

@@ -18,6 +18,7 @@ public class PreGameLobbyUI : MonoBehaviour
 
     private int lastSeenVersion = -1;
     private bool hasSetName = false;
+    private int previousColorIndex = -1;
 
     private void Start()
     {
@@ -165,13 +166,21 @@ public class PreGameLobbyUI : MonoBehaviour
                 PlayerRef localPlayer = runner.LocalPlayer;
                 if (LobbyManager.Instance.IsColorTaken(index, localPlayer))
                 {
-                    index = LobbyManager.Instance.GetNextAvailableColor(index + 1, localPlayer);
+                    bool forward = previousColorIndex == -1
+                        || index > previousColorIndex
+                        || (previousColorIndex == colorSelector.items.Count - 1 && index == 0);
+
+                    index = forward
+                        ? LobbyManager.Instance.GetNextAvailableColor(index + 1, localPlayer)
+                        : LobbyManager.Instance.GetPrevAvailableColor(index - 1, localPlayer);
+
                     colorSelector.index = index;
                     colorSelector.UpdateUI();
                 }
             }
         }
 
+        previousColorIndex = index;
         UpdatePreviewImage(index);
         PlayerPrefs.SetInt(ColorPrefsKey, index);
 
