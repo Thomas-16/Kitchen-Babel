@@ -37,7 +37,7 @@ MonoBehaviour:
     type: 2}
   currentLanguage: {fileID: 11400000, guid: 8d3376ccffec1fb4eb27e25b3629b305, type: 2}
   brandLogo: {fileID: 0}
-  gameLogo: {fileID: 21300000, guid: a644e8885b470a642b1f392d12aece47, type: 3}
+  gameLogo: {fileID: 21300000, guid: 9ecd3d4fecc63d84fab36ef04cc136dc, type: 3}
   enableSplashScreen: 1
   showSplashScreenOnce: 1
   pakType: 0
