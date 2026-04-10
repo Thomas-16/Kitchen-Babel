@@ -9,6 +9,5 @@ public class ResetStaticDataManager : MonoBehaviour
         Player.ResetStaticData();
         KitchenGameManager.ResetStaticData();
         DeliveryManager.ResetStaticData();
-        CounterLayoutManager.ResetStaticData();
     }
 }

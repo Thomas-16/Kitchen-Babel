@@ -323,7 +323,6 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
             if (KitchenGameManager.Instance != null)
             {
-                CounterLayoutManager.Instance?.SpawnRandomizedLayout();
                 KitchenGameManager.Instance.TryStartGame();
             }
             else if (LobbyManager.Instance == null)
@@ -437,9 +436,9 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         Debug.Log("[NetworkRunnerManager] HostMigrationResume — restoring game state from snapshot...");
 
-        // 1. Restore scene object state (KitchenGameManager, DeliveryManager, CounterLayoutManager, etc.)
+        // 1. Restore scene object state (counters, KitchenGameManager, DeliveryManager, etc.)
         //    Scene objects already exist in the loaded scene; we just copy their networked state
-        //    from the snapshot. Note: counters are runtime-spawned and restored in step 2.
+        //    from the snapshot.
         foreach ((NetworkObject sceneObject, NetworkObjectHeaderPtr snapshotData) in runner.GetResumeSnapshotNetworkSceneObjects())
         {
             sceneObject.CopyStateFrom(snapshotData);
