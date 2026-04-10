@@ -4,7 +4,7 @@ public class DeliveryCounter : BaseCounter
 {
     public static DeliveryCounter Instance {get; private set;}
 
-    private void Awake() {
+    public override void Spawned() {
         Instance = this;
     }
     public override void Interact(Player player)
