@@ -38,7 +38,6 @@ public class KitchenGameManager : NetworkBehaviour
     public override void Spawned(){
         Instance = this;
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        OnInstanceReady?.Invoke(this, EventArgs.Empty);
 
         // Only initialize state on fresh game start, not during host migration
         // (during migration, [Networked] properties are already restored from snapshot)
@@ -47,6 +46,9 @@ public class KitchenGameManager : NetworkBehaviour
             CountdownTimer = 3f;
             IsInitialized = true;
         }
+
+        // Fire after initialization so subscribers (like MapManager.TryStartGame) don't get overwritten
+        OnInstanceReady?.Invoke(this, EventArgs.Empty);
 
         // Only host listens to pause input
         if(HasStateAuthority){

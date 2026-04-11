@@ -399,10 +399,6 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 7586922572932489967}
-    - targetCorrespondingSourceObject: {fileID: 2209836581881336197, guid: 278a55dbe0c85be44a21c4006c699a6c,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 7036172980306933691}
   m_SourcePrefab: {fileID: 100100000, guid: 278a55dbe0c85be44a21c4006c699a6c, type: 3}
 --- !u!4 &4239401181290479431 stripped
 Transform:
@@ -430,18 +426,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   counterTopPoint: {fileID: 7089246113951992014}
   kitchenObjectSO: {fileID: 11400000, guid: 01ba70772bc57194e937b02e8698fcc7, type: 2}
---- !u!114 &7036172980306933691
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5135326039911089549}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97a3893c33a69624ca9a2d3d8f5e105d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ShuffleableCounter
 --- !u!4 &7089246113951992014 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4291001070859640006, guid: 278a55dbe0c85be44a21c4006c699a6c,

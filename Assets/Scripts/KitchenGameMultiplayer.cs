@@ -8,10 +8,12 @@ using UnityEngine;
 public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
 {
     public static KitchenGameMultiplayer Instance { get; private set; }
+    public static event Action OnInstanceReady;
 
     [SerializeField] private NetworkPrefabRef playerPrefab;
-    [SerializeField] private List<Transform> spawnPositions;
     [SerializeField] private KitchenObjectListSO kitchenObjectListSO;
+
+    private List<Transform> spawnPositions = new List<Transform>();
 
     private static bool isHostMigrationResume;
 
@@ -29,28 +31,45 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
         {
             Debug.Log("[KGM] Spawned() during host migration — skipping player spawning.");
             isHostMigrationResume = false;
+        }
+        else
+        {
+            // Player spawning is deferred until MapManager calls SpawnAllPlayers()
+            Debug.Log($"[KGM] Spawned() called. IsServer={Runner.IsServer}, ActivePlayers count={Runner.ActivePlayers.Count()}");
+        }
+
+        // Always fire so MapManager can proceed with map setup
+        OnInstanceReady?.Invoke();
+    }
+
+    public void SetSpawnPositions(List<Transform> positions)
+    {
+        spawnPositions = positions;
+    }
+
+    public void SpawnAllPlayers()
+    {
+        if (!Runner.IsServer) return;
+        if (spawnPositions.Count == 0)
+        {
+            Debug.LogWarning("[KGM] SpawnAllPlayers called but no spawn positions set!");
             return;
         }
 
-        // Spawn player characters for all players already in the session
-        Debug.Log($"[KGM] Spawned() called. IsServer={Runner.IsServer}, ActivePlayers count={Runner.ActivePlayers.Count()}");
-        if (Runner.IsServer)
+        foreach (PlayerRef player in Runner.ActivePlayers)
         {
-            foreach (PlayerRef player in Runner.ActivePlayers)
-            {
-                int spawnIndex = player.AsIndex % spawnPositions.Count;
-                Transform spawnPoint = spawnPositions[spawnIndex];
-                Debug.Log($"[KGM] Spawning player prefab for {player} at index {spawnIndex}, pos={spawnPoint.position}");
-                PlayerRef capturedPlayer = player;
-                Runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player,
-                    (runner, obj) =>
-                    {
-                        Player p = obj.GetComponent<Player>();
-                        p.ColorIndex = LobbyManager.GetCachedPlayerColorIndex(capturedPlayer);
-                        p.PlayerName = LobbyManager.GetCachedPlayerName(capturedPlayer);
-                    }
-                );
-            }
+            int spawnIndex = player.AsIndex % spawnPositions.Count;
+            Transform spawnPoint = spawnPositions[spawnIndex];
+            Debug.Log($"[KGM] Spawning player prefab for {player} at index {spawnIndex}, pos={spawnPoint.position}");
+            PlayerRef capturedPlayer = player;
+            Runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player,
+                (runner, obj) =>
+                {
+                    Player p = obj.GetComponent<Player>();
+                    p.ColorIndex = LobbyManager.GetCachedPlayerColorIndex(capturedPlayer);
+                    p.PlayerName = LobbyManager.GetCachedPlayerName(capturedPlayer);
+                }
+            );
         }
     }
 
@@ -85,6 +104,11 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player){
         Debug.Log($"[KGM] OnPlayerJoined: {player}, IsServer={runner.IsServer}");
         if(runner.IsServer){
+            if (spawnPositions.Count == 0)
+            {
+                Debug.LogWarning("[KGM] OnPlayerJoined but no spawn positions set yet — skipping spawn.");
+                return;
+            }
             int spawnIndex = player.AsIndex % spawnPositions.Count;
             Transform spawnPoint = spawnPositions[spawnIndex];
 

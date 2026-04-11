@@ -323,7 +323,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
             if (KitchenGameManager.Instance != null)
             {
-                KitchenGameManager.Instance.TryStartGame();
+                // TryStartGame is now called by MapManager after the map is loaded and counters are spawned
             }
             else if (LobbyManager.Instance == null)
             {
