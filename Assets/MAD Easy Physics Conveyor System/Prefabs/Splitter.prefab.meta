@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0c65f838ad3d5db4abbb2f5946f46197
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 223970
+  packageName: MAD Easy Physics Conveyor System
+  packageVersion: 1.0
+  assetPath: Assets/MAD Easy Physics Conveyor System/Prefabs/Splitter.prefab
+  uploadId: 510043

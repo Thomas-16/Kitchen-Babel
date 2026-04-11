@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: bf30264be8d353947a270cc98c4cd79b
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 223970
+  packageName: MAD Easy Physics Conveyor System
+  packageVersion: 1.0
+  assetPath: Assets/MAD Easy Physics Conveyor System/Shaders/Conveyor.shadergraph
+  uploadId: 510043

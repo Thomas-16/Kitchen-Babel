@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d93f74a449873c24e94eae4a584436d8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 223970
+  packageName: MAD Easy Physics Conveyor System
+  packageVersion: 1.0
+  assetPath: Assets/MAD Easy Physics Conveyor System/Scripts/Delete.cs
+  uploadId: 510043

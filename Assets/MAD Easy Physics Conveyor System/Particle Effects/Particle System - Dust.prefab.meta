@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f08fe3c029e951944870d24c259a3d62
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 223970
+  packageName: MAD Easy Physics Conveyor System
+  packageVersion: 1.0
+  assetPath: Assets/MAD Easy Physics Conveyor System/Particle Effects/Particle System
+    - Dust.prefab
+  uploadId: 510043
