@@ -48,7 +48,6 @@ public class DeliveryManager : NetworkBehaviour
 
     public override void FixedUpdateNetwork(){
         if(!HasStateAuthority) return;
-        if(KitchenGameManager.Instance.IsPaused) return;
 
         if(KitchenGameManager.Instance.IsGamePlaying()){
             spawnRecipeTimer -= Runner.DeltaTime;

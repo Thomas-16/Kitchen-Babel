@@ -39,7 +39,6 @@ public class PlatesCounter : BaseCounter
 
     public override void FixedUpdateNetwork(){
         if(!HasStateAuthority) return;
-        if(KitchenGameManager.Instance.IsPaused) return;
 
         spawnPlateTimer += Runner.DeltaTime;
         if(spawnPlateTimer > spawnPlateTimerMax){

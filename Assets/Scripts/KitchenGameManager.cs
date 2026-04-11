@@ -9,8 +9,6 @@ public class KitchenGameManager : NetworkBehaviour
     public static event EventHandler OnInstanceReady;
 
     public event EventHandler OnStateChanged;
-    public event EventHandler OnGamePaused;
-    public event EventHandler OnGameUnpaused;
 
     private enum State{
         WaitingToStart,
@@ -22,14 +20,12 @@ public class KitchenGameManager : NetworkBehaviour
     [Networked] public int NetworkedState { get; set; }
     [Networked] public float CountdownTimer { get; set; }
     [Networked] public float GamePlayingTimer { get; set; }
-    [Networked] public NetworkBool IsPaused { get; set; }
     [Networked] private NetworkBool IsInitialized { get; set; }
     [Networked] private float ReturnToLobbyTimer { get; set; }
 
     private float gamePlayingTimerMax = 5f;
     private float returnToLobbyDelay = 5f;
     private ChangeDetector changeDetector;
-    private bool localIsPaused;
 
     public static void ResetStaticData(){
         OnInstanceReady = null;
@@ -49,15 +45,6 @@ public class KitchenGameManager : NetworkBehaviour
 
         // Fire after initialization so subscribers (like MapManager.TryStartGame) don't get overwritten
         OnInstanceReady?.Invoke(this, EventArgs.Empty);
-
-        // Only host listens to pause input
-        if(HasStateAuthority){
-            GameInput.Instance.OnPausedAction += GameInput_OnPausedAction;
-        }
-    }
-
-    private void GameInput_OnPausedAction(object sender, EventArgs e){
-        TogglePauseGame();
     }
 
     public override void Render(){
@@ -66,20 +53,12 @@ public class KitchenGameManager : NetworkBehaviour
                 case nameof(NetworkedState):
                     OnStateChanged?.Invoke(this, EventArgs.Empty);
                     break;
-                case nameof(IsPaused):
-                    if(IsPaused){
-                        OnGamePaused?.Invoke(this, EventArgs.Empty);
-                    }else{
-                        OnGameUnpaused?.Invoke(this, EventArgs.Empty);
-                    }
-                    break;
             }
         }
     }
 
     public override void FixedUpdateNetwork(){
         if(!HasStateAuthority) return;
-        if(IsPaused) return;
 
         State currentState = (State)NetworkedState;
         switch(currentState){
@@ -131,9 +110,5 @@ public class KitchenGameManager : NetworkBehaviour
     }
     public float GetGamePlayingTimerNormalized(){
         return 1 - GamePlayingTimer / gamePlayingTimerMax;
-    }
-    public void TogglePauseGame(){
-        if(!HasStateAuthority) return;
-        IsPaused = !IsPaused;
     }
 }

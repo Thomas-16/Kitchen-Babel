@@ -41,7 +41,7 @@ public class TutorialUI : MonoBehaviour
         keyMoveRightText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Move_Right);
         keyInteractText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Interact);
         keyInteractAlternateText.text = GameInput.Instance.GetBindingText(GameInput.Binding.InteractAlternate);
-        keyPauseText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Pause) == "Escape" ? "Esc" : GameInput.Instance.GetBindingText(GameInput.Binding.Pause);
+        keyPauseText.text = "Esc";
         keyGamepadInteractText.text = "A";
         keyGamepadInteractAlternateText.text = "X";
         keyGamepadPauseText.text = "Start";

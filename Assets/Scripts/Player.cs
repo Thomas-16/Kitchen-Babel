@@ -51,7 +51,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
     public override void FixedUpdateNetwork(){
         if(KitchenGameManager.Instance == null) return;
-        if(KitchenGameManager.Instance.IsPaused) return;
 
         if(!KitchenGameManager.Instance.IsGamePlaying() &&
            !KitchenGameManager.Instance.IsWaitingToStart()){

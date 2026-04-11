@@ -10,7 +10,6 @@ public class GameInput : MonoBehaviour
 
     public event EventHandler OnInteractAction;
     public event EventHandler OnInteractAlternateAction;
-    public event EventHandler OnPausedAction;
     public event EventHandler OnBindingRebind;
 
     public enum Binding{
@@ -20,7 +19,6 @@ public class GameInput : MonoBehaviour
         Move_Right,
         Interact,
         InteractAlternate,
-        Pause,
     }
 
     private PlayerInputActions playerInputActions;
@@ -40,17 +38,12 @@ public class GameInput : MonoBehaviour
 
         playerInputActions.Player.Interact.performed += Interact_performed;
         playerInputActions.Player.InteractAlternate.performed += InteractAlternate_performed;
-        playerInputActions.Player.Pause.performed += Pause_performed;
     }
     private void OnDestroy() {
         playerInputActions.Player.Interact.performed -= Interact_performed;
         playerInputActions.Player.InteractAlternate.performed -= InteractAlternate_performed;
-        playerInputActions.Player.Pause.performed -= Pause_performed;
 
         playerInputActions.Dispose();
-    }
-    private void Pause_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj){
-        OnPausedAction?.Invoke(this, EventArgs.Empty);
     }
     private void InteractAlternate_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj){
         OnInteractAlternateAction?.Invoke(this, EventArgs.Empty);
@@ -96,9 +89,6 @@ public class GameInput : MonoBehaviour
                 return playerInputActions.Player.Interact.bindings[0].ToDisplayString();
             case Binding.InteractAlternate:
                 return playerInputActions.Player.InteractAlternate.bindings[0].ToDisplayString();
-            case Binding.Pause:
-                return playerInputActions.Player.Pause.bindings[0].ToDisplayString();
-
         }
     }
     public void RebindBinding(Binding binding, Action onActionRebound){
@@ -131,10 +121,6 @@ public class GameInput : MonoBehaviour
                 break;
             case Binding.InteractAlternate:
                 inputAction = playerInputActions.Player.InteractAlternate;
-                bindingIndex = 0;
-                break;
-            case Binding.Pause:
-                inputAction = playerInputActions.Player.Pause;
                 bindingIndex = 0;
                 break;
         }

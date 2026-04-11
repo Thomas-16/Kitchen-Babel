@@ -108,7 +108,6 @@ public class StoveCounter : BaseCounter, IHasProgress
 
     public override void FixedUpdateNetwork(){
         if(!HasStateAuthority) return;
-        if(KitchenGameManager.Instance.IsPaused) return;
 
         if(HasKitchenObject()){
             State currentState = (State)NetworkedState;
