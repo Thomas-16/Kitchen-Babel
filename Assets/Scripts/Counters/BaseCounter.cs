@@ -12,7 +12,20 @@ public class BaseCounter : NetworkBehaviour, IKitchenObjectParent
 
     [SerializeField] private Transform counterTopPoint;
 
+    [Networked] public Vector3 SpawnPosition { get; set; }
+    [Networked] public Quaternion SpawnRotation { get; set; }
+
     private KitchenObject kitchenObject;
+
+    public override void Spawned()
+    {
+        // Clients don't have the spawn position from Runner.Spawn() — apply from networked state
+        if (!HasStateAuthority)
+        {
+            transform.position = SpawnPosition;
+            transform.rotation = SpawnRotation;
+        }
+    }
 
     public virtual void Interact(Player player){
 

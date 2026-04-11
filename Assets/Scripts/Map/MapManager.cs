@@ -171,10 +171,22 @@ public class MapManager : NetworkBehaviour
         // Spawn all counters at their final positions
         for (int i = 0; i < placeholders.Length; i++)
         {
+            Vector3 pos = placeholders[i].transform.position;
+            Quaternion rot = placeholders[i].transform.rotation;
             Runner.Spawn(
                 resolvedPrefabs[i],
-                placeholders[i].transform.position,
-                placeholders[i].transform.rotation
+                pos,
+                rot,
+                null,
+                (runner, obj) =>
+                {
+                    BaseCounter counter = obj.GetComponent<BaseCounter>();
+                    if (counter != null)
+                    {
+                        counter.SpawnPosition = pos;
+                        counter.SpawnRotation = rot;
+                    }
+                }
             );
         }
 
