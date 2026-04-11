@@ -16,14 +16,19 @@ public class BaseCounter : NetworkBehaviour, IKitchenObjectParent
     [Networked] public Quaternion SpawnRotation { get; set; }
 
     private KitchenObject kitchenObject;
+    private bool hasAppliedSpawnTransform;
 
-    public override void Spawned()
+    private void LateUpdate()
     {
-        // Clients don't have the spawn position from Runner.Spawn() — apply from networked state
-        if (!HasStateAuthority)
+        // Clients don't receive the position from Runner.Spawn() — apply once from networked state
+        if (!hasAppliedSpawnTransform && !HasStateAuthority)
         {
-            transform.position = SpawnPosition;
-            transform.rotation = SpawnRotation;
+            if (SpawnPosition != Vector3.zero || SpawnRotation != Quaternion.identity)
+            {
+                transform.position = SpawnPosition;
+                transform.rotation = SpawnRotation;
+                hasAppliedSpawnTransform = true;
+            }
         }
     }
 
