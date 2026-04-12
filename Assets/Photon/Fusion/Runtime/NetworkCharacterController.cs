@@ -91,7 +91,7 @@ namespace Fusion {
       _controller.enabled = true;
     }
 
-    public void Move(Vector3 direction) {
+    public void Move(Vector3 direction, Vector3 externalVelocity = default) {
       var deltaTime = Runner.DeltaTime;
 
       // Client-authoritative: on forward ticks, simulate from client's own position
@@ -127,7 +127,10 @@ namespace Fusion {
       moveVelocity.x = horizontalVel.x;
       moveVelocity.z = horizontalVel.z;
 
-      _controller.Move(moveVelocity * deltaTime);
+      if (externalVelocity != default)
+        UnityEngine.Debug.Log($"[NCC] Move: externalVelocity={externalVelocity} | moveVelocity={moveVelocity} | combined={(moveVelocity + externalVelocity)} | deltaTime={deltaTime} | displacement={(moveVelocity + externalVelocity) * deltaTime}");
+
+      _controller.Move((moveVelocity + externalVelocity) * deltaTime);
 
       if (lockYPosition) {
         var pos = transform.position;

@@ -26,7 +26,10 @@
       "Bash(curl -s \"https://doc.photonengine.com/fusion/current/manual/connection-and-matchmaking/connection-lifecycle\")",
       "Bash(curl -s \"https://doc.photonengine.com/fusion/current/manual/connection-and-matchmaking/runner\")",
       "WebFetch(domain:github.com)",
-      "Bash(xargs file:*)"
+      "Bash(xargs file:*)",
+      "Bash(ls -la *.cs)",
+      "mcp__UnityMCP__refresh_unity",
+      "mcp__UnityMCP__manage_prefabs"
     ]
   }
 }

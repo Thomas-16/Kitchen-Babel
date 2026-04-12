@@ -23,7 +23,7 @@ public class KitchenGameManager : NetworkBehaviour
     [Networked] private NetworkBool IsInitialized { get; set; }
     [Networked] private float ReturnToLobbyTimer { get; set; }
 
-    private float gamePlayingTimerMax = 5f;
+    private float gamePlayingTimerMax = 30f;
     private float returnToLobbyDelay = 5f;
     private ChangeDetector changeDetector;
 

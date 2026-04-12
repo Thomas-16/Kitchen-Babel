@@ -3167,8 +3167,6 @@ MonoBehaviour:
   _NetworkedState: 0
   _CountdownTimer: 0
   _GamePlayingTimer: 0
-  _IsPaused:
-    _value: 0
 --- !u!4 &1507142763
 Transform:
   m_ObjectHideFlags: 0

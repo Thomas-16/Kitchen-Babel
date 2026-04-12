@@ -28,6 +28,8 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     private Vector3 lastInteractDir;
     private BaseCounter selectedCounter;
     private KitchenObject kitchenObject;
+    private Vector3 conveyorVelocity;
+    private int conveyorResetFrame = -1;
 
     public static void ResetStaticData(){
         OnAnyPlayerSpawned = null;
@@ -115,9 +117,28 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Vector2 inputVector = input.moveDirection;
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
-        networkController.Move(moveDir);
+        Vector3 conveyorVel = GetConveyorVelocity();
+        if(conveyorVel != Vector3.zero)
+            Debug.Log($"[Player] HandleMovement: conveyorVel={conveyorVel} | moveDir={moveDir}");
+
+        networkController.Move(moveDir, conveyorVel);
 
         IsWalking = moveDir != Vector3.zero;
+    }
+
+    public void AccumulateConveyorVelocity(Vector3 velocity){
+        int frame = Time.frameCount;
+        if(frame != conveyorResetFrame){
+            conveyorVelocity = Vector3.zero;
+            conveyorResetFrame = frame;
+        }
+        conveyorVelocity += velocity;
+    }
+
+    private Vector3 GetConveyorVelocity(){
+        if(Time.frameCount - conveyorResetFrame > 1)
+            return Vector3.zero;
+        return conveyorVelocity;
     }
 
     private void SetSelectedCounter(BaseCounter selectedCounter){
