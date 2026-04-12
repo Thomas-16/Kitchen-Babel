@@ -5,10 +5,18 @@ using System;
 
 public class DeliveryManager : NetworkBehaviour
 {
+    public class DeliveryEventArgs : EventArgs {
+        public DeliveryCounter DeliveryCounter { get; }
+
+        public DeliveryEventArgs(DeliveryCounter deliveryCounter) {
+            DeliveryCounter = deliveryCounter;
+        }
+    }
+
     public event EventHandler OnRecipeSpawned;
     public event EventHandler OnRecipeCompleted;
-    public event EventHandler OnRecipeSuccess;
-    public event EventHandler OnRecipeFailed;
+    public event EventHandler<DeliveryEventArgs> OnRecipeSuccess;
+    public event EventHandler<DeliveryEventArgs> OnRecipeFailed;
 
     public static DeliveryManager Instance {get; private set;}
     public static event EventHandler OnInstanceReady;
@@ -62,7 +70,7 @@ public class DeliveryManager : NetworkBehaviour
         }
     }
 
-    public void DeliverRecipe(PlateKitchenObject plateKitchenObject){
+    public void DeliverRecipe(DeliveryCounter deliveryCounter, PlateKitchenObject plateKitchenObject){
         for(int i = 0; i < WaitingRecipeIndices.Count; i++){
             RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[WaitingRecipeIndices[i]];
 
@@ -84,22 +92,30 @@ public class DeliveryManager : NetworkBehaviour
                     SuccessfulRecipesAmount++;
                     WaitingRecipeIndices.Remove(WaitingRecipeIndices[i]);
 
-                    RPC_RecipeSuccess();
+                    RPC_RecipeSuccess(deliveryCounter.GetNetworkObject().Id);
                     return;
                 }
             }
         }
-        RPC_RecipeFailed();
+        RPC_RecipeFailed(deliveryCounter.GetNetworkObject().Id);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_RecipeSuccess(){
-        OnRecipeSuccess?.Invoke(this, EventArgs.Empty);
+    private void RPC_RecipeSuccess(NetworkId deliveryCounterId){
+        OnRecipeSuccess?.Invoke(this, new DeliveryEventArgs(GetDeliveryCounterFromId(deliveryCounterId)));
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_RecipeFailed(){
-        OnRecipeFailed?.Invoke(this, EventArgs.Empty);
+    private void RPC_RecipeFailed(NetworkId deliveryCounterId){
+        OnRecipeFailed?.Invoke(this, new DeliveryEventArgs(GetDeliveryCounterFromId(deliveryCounterId)));
+    }
+
+    private DeliveryCounter GetDeliveryCounterFromId(NetworkId deliveryCounterId){
+        if(Runner != null && Runner.TryFindObject(deliveryCounterId, out NetworkObject networkObject)){
+            return networkObject.GetComponent<DeliveryCounter>();
+        }
+
+        return null;
     }
 
     public List<RecipeSO> GetWaitingRecipeSOList(){

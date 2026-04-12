@@ -16,9 +16,11 @@ public class DeliveryResultUI : MonoBehaviour
     [SerializeField] private Sprite failedSprite;
 
     private Animator animator;
+    private DeliveryCounter deliveryCounter;
 
     private void Awake() {
         animator = GetComponent<Animator>();
+        deliveryCounter = GetComponentInParent<DeliveryCounter>();
     }
     private void Start() {
         DeliveryManager.OnInstanceReady += DeliveryManager_OnInstanceReady;
@@ -34,14 +36,18 @@ public class DeliveryResultUI : MonoBehaviour
         DeliveryManager.Instance.OnRecipeSuccess += DeliveryManager_OnRecipeSucess;
         DeliveryManager.Instance.OnRecipeFailed += DeliveryManager_OnRecipeFailed;
     }
-    private void DeliveryManager_OnRecipeFailed(object sender, EventArgs e){
+    private void DeliveryManager_OnRecipeFailed(object sender, DeliveryManager.DeliveryEventArgs e){
+        if(e.DeliveryCounter != deliveryCounter) return;
+
         gameObject.SetActive(true);
         animator.SetTrigger(POPUP);
         backgroundImage.color = failedColor;
         iconImage.sprite = failedSprite;
         messageText.text = "DELIVERY\nFAILED";
     }
-    private void DeliveryManager_OnRecipeSucess(object sender, EventArgs e){
+    private void DeliveryManager_OnRecipeSucess(object sender, DeliveryManager.DeliveryEventArgs e){
+        if(e.DeliveryCounter != deliveryCounter) return;
+
         gameObject.SetActive(true);
         animator.SetTrigger(POPUP);
         backgroundImage.color = successColor;

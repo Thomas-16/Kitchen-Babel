@@ -46,12 +46,14 @@ public class SoundManager : MonoBehaviour
     private void CuttingCounter_OnAnyCut(object sender, EventArgs e){
         PlaySound(audioClipRefsSO.chop, (sender as CuttingCounter).transform.position);
     }
-    private void DeliveryManager_OnRecipeFailed(object sender, EventArgs e){
-        DeliveryCounter deliveryCounter = DeliveryCounter.Instance;
+    private void DeliveryManager_OnRecipeFailed(object sender, DeliveryManager.DeliveryEventArgs e){
+        DeliveryCounter deliveryCounter = e.DeliveryCounter;
+        if(deliveryCounter == null) return;
         PlaySound(audioClipRefsSO.deliveryFailed, deliveryCounter.transform.position);
     }
-    private void DeliveryManager_OnRecipeSuccess(object sender, EventArgs e){
-        DeliveryCounter deliveryCounter = DeliveryCounter.Instance;
+    private void DeliveryManager_OnRecipeSuccess(object sender, DeliveryManager.DeliveryEventArgs e){
+        DeliveryCounter deliveryCounter = e.DeliveryCounter;
+        if(deliveryCounter == null) return;
         PlaySound(audioClipRefsSO.deliverySuccess, deliveryCounter.transform.position);
     }
     private void PlaySound(AudioClip[] audioClipArray, Vector3 position, float volumeMultiplier = 1f){
