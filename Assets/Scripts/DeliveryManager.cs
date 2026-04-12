@@ -42,6 +42,10 @@ public class DeliveryManager : NetworkBehaviour
         OnInstanceReady?.Invoke(this, EventArgs.Empty);
     }
 
+    public override void Despawned(NetworkRunner runner, bool hasState){
+        if(Instance == this) Instance = null;
+    }
+
     public override void Render(){
         int currentCount = WaitingRecipeIndices.Count;
         if(currentCount != lastKnownRecipeCount){
@@ -56,6 +60,7 @@ public class DeliveryManager : NetworkBehaviour
 
     public override void FixedUpdateNetwork(){
         if(!HasStateAuthority) return;
+        if(!KitchenGameManager.IsReady) return;
 
         if(KitchenGameManager.Instance.IsGamePlaying()){
             spawnRecipeTimer -= Runner.DeltaTime;

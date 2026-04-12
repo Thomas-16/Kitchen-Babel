@@ -8,6 +8,9 @@ public class KitchenGameManager : NetworkBehaviour
 
     public static event EventHandler OnInstanceReady;
 
+    public static bool IsReady =>
+        Instance != null && Instance.Object != null && Instance.Object.IsValid;
+
     public event EventHandler OnStateChanged;
 
     private enum State{
@@ -45,6 +48,10 @@ public class KitchenGameManager : NetworkBehaviour
 
         // Fire after initialization so subscribers (like MapManager.TryStartGame) don't get overwritten
         OnInstanceReady?.Invoke(this, EventArgs.Empty);
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState){
+        if(Instance == this) Instance = null;
     }
 
     public override void Render(){

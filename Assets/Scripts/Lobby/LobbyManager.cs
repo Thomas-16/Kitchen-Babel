@@ -96,6 +96,13 @@ public class LobbyManager : NetworkBehaviour
             if (propertyName == nameof(PlayersVersion))
             {
                 OnPlayersChanged?.Invoke();
+
+                // Preserve lobby state (ready, color, name) across host migration by refreshing
+                // the Photon snapshot whenever the authoritative Players list mutates.
+                if (HasStateAuthority)
+                {
+                    NetworkRunnerManager.Instance?.PushSnapshot();
+                }
             }
         }
     }

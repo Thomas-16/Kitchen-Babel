@@ -18,6 +18,7 @@ public class PlatesCounter : BaseCounter
     private int lastKnownPlateCount;
 
     public override void Spawned(){
+        base.Spawned();
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
         lastKnownPlateCount = PlatesSpawnAmount;
     }
@@ -39,6 +40,7 @@ public class PlatesCounter : BaseCounter
 
     public override void FixedUpdateNetwork(){
         if(!HasStateAuthority) return;
+        if(!KitchenGameManager.IsReady) return;
 
         spawnPlateTimer += Runner.DeltaTime;
         if(spawnPlateTimer > spawnPlateTimerMax){

@@ -138,6 +138,10 @@ public class MapManager : NetworkBehaviour
                 Debug.Log("[MapManager] KitchenGameManager not ready — subscribing to OnInstanceReady");
                 KitchenGameManager.OnInstanceReady += OnKitchenGameManagerReady;
             }
+
+            // Capture a snapshot that includes all spawned counters and players so an early
+            // disconnect can migrate cleanly before Fusion's auto-update timer fires.
+            NetworkRunnerManager.Instance?.PushSnapshot();
         }
         else
         {

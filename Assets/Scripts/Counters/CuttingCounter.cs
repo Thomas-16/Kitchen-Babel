@@ -21,6 +21,7 @@ public class CuttingCounter : BaseCounter, IHasProgress
     private ChangeDetector changeDetector;
 
     public override void Spawned(){
+        base.Spawned();
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
     }
 

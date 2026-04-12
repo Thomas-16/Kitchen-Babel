@@ -28,6 +28,7 @@ public class StoveCounter : BaseCounter, IHasProgress
     private ChangeDetector changeDetector;
 
     public override void Spawned(){
+        base.Spawned();
         changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
         // Don't reset NetworkedState — defaults to 0 (Idle) on fresh start,
         // and is restored from snapshot during host migration.

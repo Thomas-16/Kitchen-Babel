@@ -1,7 +1,7 @@
 using Fusion;
 using UnityEngine;
 
-public class KitchenObject : NetworkBehaviour
+public class KitchenObject : NetworkBehaviour, IAfterHostMigration
 {
     [SerializeField] private KitchenObjectSO kitchenObjectSO;
 
@@ -32,6 +32,14 @@ public class KitchenObject : NetworkBehaviour
                     ApplyParentVisual();
                     break;
             }
+        }
+    }
+
+    public void AfterHostMigration(){
+        // Re-resolve parent after all migration spawns complete — during Spawned(), the parent
+        // NetworkBehaviour may not have been re-registered yet.
+        if(KitchenObjectParentId != default){
+            ApplyParentVisual();
         }
     }
 

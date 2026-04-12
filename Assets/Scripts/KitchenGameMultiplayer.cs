@@ -75,6 +75,7 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     public override void Despawned(NetworkRunner runner, bool hasState){
         Runner.RemoveCallbacks(this);
+        if(Instance == this) Instance = null;
     }
 
     public KitchenObjectListSO GetKitchenObjectListSO(){
@@ -109,6 +110,19 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
                 Debug.LogWarning("[KGM] OnPlayerJoined but no spawn positions set yet — skipping spawn.");
                 return;
             }
+
+            // After host migration Fusion re-fires OnPlayerJoined for every connected player,
+            // but their Player NetworkObject was already restored by HostMigrationResume.
+            // Skip the spawn if a Player already exists for this PlayerRef.
+            foreach (NetworkObject existing in runner.GetAllNetworkObjects())
+            {
+                if (existing.InputAuthority == player && existing.GetComponent<Player>() != null)
+                {
+                    Debug.Log($"[KGM] Player already exists for {player} — skipping spawn.");
+                    return;
+                }
+            }
+
             int spawnIndex = player.AsIndex % spawnPositions.Count;
             Transform spawnPoint = spawnPositions[spawnIndex];
 
