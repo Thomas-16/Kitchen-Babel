@@ -137,9 +137,9 @@ MonoBehaviour:
   _stateAuthorityChangeErrorCorrectionDelta: 0
   gravity: 0
   jumpImpulse: 8
-  acceleration: 90
+  acceleration: 110
   braking: 100
-  maxSpeed: 8
+  maxSpeed: 9
   rotationSpeed: 10
   lockYPosition: 1
 --- !u!114 &8297200602717581531

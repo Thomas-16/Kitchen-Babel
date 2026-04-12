@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: MapList
   m_EditorClassIdentifier: Assembly-CSharp::MapListSO
   maps:
-  - {fileID: 11400000, guid: eba06990668e4c444acb10f294261a18, type: 2}
+  - {fileID: 11400000, guid: 00f57d4a2f8a8f445af8f1034174b788, type: 2}

@@ -5,6 +5,7 @@ Shader "Custom/ConveyorWorldUV"
         _BeltTex ("Belt", 2D) = "white" {}
         _NormalTex ("Normal", 2D) = "bump" {}
         _Tiling ("Tiling", Vector) = (1, 1, 0, 0)
+        _TextureScale ("Texture Scale", Vector) = (1, 1, 0, 0)
         _Offset ("Offset", Vector) = (1, 1, 0, 0)
         _Speed ("Speed", Float) = 1
         _NormalStrength ("Normal Strength", Float) = 1
@@ -45,6 +46,7 @@ Shader "Custom/ConveyorWorldUV"
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _Tiling;
+                float4 _TextureScale;
                 float4 _Offset;
                 float  _Speed;
                 float  _NormalStrength;
@@ -85,7 +87,8 @@ Shader "Custom/ConveyorWorldUV"
                 );
 
                 // Object-space position * scale = world-size UVs that tile with scale
-                float2 baseUV = IN.positionOS.xz * objScale.xz * _Tiling.xy;
+                float2 scaledTiling = _Tiling.xy / max(_TextureScale.xy, float2(0.0001, 0.0001));
+                float2 baseUV = IN.positionOS.xz * objScale.xz * scaledTiling;
                 // Animate along the belt direction
                 baseUV += _Offset.xy * _Speed * _Time.y;
 

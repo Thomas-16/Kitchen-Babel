@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 3776101749931915253}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 0.02337, z: 0}
-  m_LocalScale: {x: 1, y: 0.21004763, z: 1}
+  m_LocalPosition: {x: -0, y: 0.03337, z: 0}
+  m_LocalScale: {x: 1.5, y: 0.4100476, z: 1.3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5635742412126674223}
@@ -142,7 +142,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0, y: 0.002, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5, y: 1, z: 1.3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5635742412126674223}
@@ -313,8 +313,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 0.5, z: 0.8}
-  m_Center: {x: -0.5, y: 0.01, z: 0}
+  m_Size: {x: 1.5, y: 0.5, z: 1.1}
+  m_Center: {x: -0.75, y: 0.01, z: 0}
 --- !u!114 &2617928178021306836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -327,8 +327,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9892dc2815e8e0e4caa8f0990347a6d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorBelt
-  speed: 8
-  animationSpeedMultiplier: 0.5
+  speed: 5.7
+  animationSpeedMultiplier: 0.6
   beltRenderer: {fileID: 6840786116158113880}
 --- !u!54 &709929879998501412
 Rigidbody:
