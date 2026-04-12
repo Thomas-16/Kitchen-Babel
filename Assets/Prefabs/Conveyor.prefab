@@ -327,7 +327,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9892dc2815e8e0e4caa8f0990347a6d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorBelt
-  speed: 10
+  speed: 8
+  animationSpeedMultiplier: 0.5
+  beltRenderer: {fileID: 6840786116158113880}
 --- !u!54 &709929879998501412
 Rigidbody:
   m_ObjectHideFlags: 0
