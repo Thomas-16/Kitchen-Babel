@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67665332f2bb6274593e8eff03a92926, type: 3}
+  m_Name: Map_Orient
+  m_EditorClassIdentifier: Assembly-CSharp::MapConfigSO
+  mapName: Orient
+  mapPrefab: {fileID: 3800631686076888153, guid: 47aafa1e310eedb4c9edd508943821d6,
+    type: 3}
+  cameraPosition: {x: 1.43, y: 23.8, z: -12.2}
+  cameraRotation: {x: 63.3, y: 0, z: 0}
+  cameraFOV: 30
