@@ -225,9 +225,6 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
         SetGameInSession(true);
 
-        // Refresh snapshot so a disconnect during the scene transition migrates cleanly.
-        PushSnapshot();
-
         SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/GameScene.unity"));
         Runner.LoadScene(sceneRef);
     }
@@ -444,6 +441,17 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             else
             {
                 Debug.Log("[NetworkRunnerManager] Host migration succeeded. New host is running.");
+
+                // If the host disconnected during gameplay, route everyone back to the lobby UI
+                // instead of trying to preserve match state.
+                if (SceneManager.GetActiveScene().name != "MainMenuScene")
+                {
+                    Debug.Log("[NetworkRunnerManager] Migrated mid-game — returning everyone to lobby.");
+                    pendingLobbyManagerSpawn = true;
+                    SetGameInSession(false);
+                    SceneRef lobbyRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity"));
+                    Runner.LoadScene(lobbyRef);
+                }
             }
         }
         catch (Exception e)
@@ -460,60 +468,31 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void HostMigrationResume(NetworkRunner runner)
     {
-        Debug.Log("[NetworkRunnerManager] HostMigrationResume — restoring game state from snapshot...");
-
         string activeSceneName = SceneManager.GetActiveScene().name;
         bool isLobbyScene = activeSceneName == "MainMenuScene";
 
-        // 1. Restore scene object state (counters, KitchenGameManager, DeliveryManager, etc.)
-        //    Scene objects already exist in the loaded scene; we just copy their networked state
-        //    from the snapshot.
-        foreach ((NetworkObject sceneObject, NetworkObjectHeaderPtr snapshotData) in runner.GetResumeSnapshotNetworkSceneObjects())
+        if (!isLobbyScene)
         {
-            sceneObject.CopyStateFrom(snapshotData);
-            Debug.Log($"[HostMigration] Restored scene object: {sceneObject.name}");
+            // Mid-game migration: discard all snapshot state. OnHostMigration will load
+            // MainMenuScene and spawn a fresh LobbyManager; all players re-join cleanly.
+            Debug.Log("[HostMigration] Mid-game migration — discarding game state, will load lobby.");
+            return;
         }
 
-        // 2. Re-spawn runtime objects from the snapshot (Players, KitchenObjects, LobbyManager, counters)
+        // Lobby migration: preserve the LobbyManager (Players list, ready/colour/name).
         foreach (NetworkObject resumeNO in runner.GetResumeSnapshotNetworkObjects())
         {
-            bool isLobbyManager = resumeNO.GetComponent<LobbyManager>() != null;
-
-            // In the lobby scene, only LobbyManager should be re-spawned — any game-scene
-            // leftovers in the snapshot (from a disconnect mid-ReturnToLobby) must be skipped.
-            if (isLobbyScene && !isLobbyManager)
-            {
-                Debug.Log($"[HostMigration] Skipping {resumeNO.name} — in lobby scene.");
-                continue;
-            }
-            // Conversely, LobbyManager should not be respawned into the game scene.
-            if (!isLobbyScene && isLobbyManager)
-            {
-                Debug.Log($"[HostMigration] Skipping LobbyManager — in game scene.");
-                continue;
-            }
-
-            // Counters have no NetworkTransform — their position lives in [Networked] SpawnPosition.
-            // The ghost's Unity transform is therefore (0,0,0); prefer the networked value when present.
-            Vector3 pos = resumeNO.transform.position;
-            Quaternion rot = resumeNO.transform.rotation;
-            BaseCounter ghostCounter = resumeNO.GetComponent<BaseCounter>();
-            if (ghostCounter != null && ghostCounter.SpawnPosition != Vector3.zero)
-            {
-                pos = ghostCounter.SpawnPosition;
-                rot = ghostCounter.SpawnRotation;
-            }
-
+            if (resumeNO.GetComponent<LobbyManager>() == null) continue;
             runner.Spawn(resumeNO,
-                position: pos,
-                rotation: rot,
+                position: resumeNO.transform.position,
+                rotation: resumeNO.transform.rotation,
                 inputAuthority: resumeNO.InputAuthority,
                 onBeforeSpawned: (NetworkRunner r, NetworkObject newNO) =>
                 {
                     newNO.CopyStateFrom(resumeNO);
                 }
             );
-            Debug.Log($"[HostMigration] Re-spawned object: {resumeNO.name}, pos={pos}, InputAuthority={resumeNO.InputAuthority}");
+            Debug.Log("[HostMigration] Restored LobbyManager from snapshot.");
         }
     }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
