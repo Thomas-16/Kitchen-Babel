@@ -8,15 +8,6 @@ using UnityEngine.SceneManagement;
 
 public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    private const string MainMenuScenePath = "Assets/Scenes/MainMenuScene.unity";
-    private const string GameScenePath = "Assets/Scenes/GameScene.unity";
-
-    private enum HostMigrationResumeMode
-    {
-        SafeLobby,
-        Gameplay,
-    }
-
     public static NetworkRunnerManager Instance { get; private set; }
 
     [SerializeField] private NetworkPrefabRef lobbyManagerPrefab;
@@ -35,7 +26,6 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     private bool pendingLobbyManagerSpawn;
     private bool isMigrating;
     private bool isReturningToLobby;
-    private HostMigrationResumeMode hostMigrationResumeMode = HostMigrationResumeMode.SafeLobby;
 
     private async Task ShutdownRunner()
     {
@@ -232,7 +222,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
         SetGameInSession(true);
 
-        SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath(GameScenePath));
+        SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/GameScene.unity"));
         Runner.LoadScene(sceneRef);
     }
 
@@ -241,7 +231,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         if (Runner == null || !Runner.IsServer || isReturningToLobby) return;
         isReturningToLobby = true;
 
-        SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath(MainMenuScenePath));
+        SceneRef sceneRef = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity"));
         Runner.LoadScene(sceneRef);
     }
 
@@ -401,20 +391,8 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
         try
         {
-            Scene currentScene = SceneManager.GetActiveScene();
-            bool resumeGameplay = KitchenGameManager.Instance != null && !isReturningToLobby;
-            hostMigrationResumeMode = resumeGameplay ? HostMigrationResumeMode.Gameplay : HostMigrationResumeMode.SafeLobby;
-            string targetScenePath = resumeGameplay ? GameScenePath : MainMenuScenePath;
-
-            Debug.Log(
-                $"[NetworkRunnerManager] Host migration context: currentScene={currentScene.name}, " +
-                $"isReturningToLobby={isReturningToLobby}, resumeMode={hostMigrationResumeMode}, targetScene={targetScenePath}");
-
-            // Only suppress player respawn when we are restoring gameplay snapshot objects.
-            if (resumeGameplay)
-            {
-                KitchenGameMultiplayer.SetHostMigrationFlag();
-            }
+            // Signal KitchenGameMultiplayer to skip player spawning after migration
+            KitchenGameMultiplayer.SetHostMigrationFlag();
 
             // Shutdown old runner with HostMigration reason so OnShutdown knows to ignore it
             await runner.Shutdown(shutdownReason: ShutdownReason.HostMigration);
@@ -427,9 +405,8 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             // Start as new host with migration token + resume callback
             StartGameResult result = await Runner.StartGame(new StartGameArgs
             {
-                Scene = CreateSingleSceneInfo(targetScenePath),
                 HostMigrationToken = hostMigrationToken,
-                HostMigrationResume = resumeGameplay ? HostMigrationResume : null,
+                HostMigrationResume = HostMigrationResume,
             });
 
             if (!result.Ok)
@@ -457,34 +434,22 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void HostMigrationResume(NetworkRunner runner)
     {
-        Scene runnerScene = GetRunnerScene(runner);
-        Scene gameplayScene = SceneManager.GetSceneByPath(GameScenePath);
-        if (!SceneMatchesPath(runnerScene, GameScenePath) && !SceneMatchesPath(gameplayScene, GameScenePath))
-        {
-            Debug.LogWarning(
-                $"[NetworkRunnerManager] HostMigrationResume skipped because runner scene is '{runnerScene.name}' " +
-                $"instead of '{System.IO.Path.GetFileNameWithoutExtension(GameScenePath)}'.");
-            return;
-        }
+        Debug.Log("[NetworkRunnerManager] HostMigrationResume — restoring game state from snapshot...");
 
-        Debug.Log("[NetworkRunnerManager] HostMigrationResume — restoring gameplay state from snapshot...");
-
-        // Restore gameplay scene objects that already exist in GameScene.
+        // 1. Restore scene object state (counters, KitchenGameManager, DeliveryManager, etc.)
+        //    Scene objects already exist in the loaded scene; we just copy their networked state
+        //    from the snapshot.
         foreach ((NetworkObject sceneObject, NetworkObjectHeaderPtr snapshotData) in runner.GetResumeSnapshotNetworkSceneObjects())
         {
             sceneObject.CopyStateFrom(snapshotData);
             Debug.Log($"[HostMigration] Restored scene object: {sceneObject.name}");
         }
 
-        // Restore only gameplay-owned runtime objects. Lobby bootstrap handles lobby state separately.
+        // 2. Re-spawn runtime objects from the snapshot (Players, KitchenObjects, LobbyManager)
+        //    These objects don't exist in the scene — they were dynamically spawned and need
+        //    to be re-created. We spawn them and copy the old networked state via CopyStateFrom.
         foreach (NetworkObject resumeNO in runner.GetResumeSnapshotNetworkObjects())
         {
-            if (!ShouldRespawnForGameplayMigration(resumeNO))
-            {
-                Debug.Log($"[HostMigration] Skipped runtime object during gameplay resume: {resumeNO.name}");
-                continue;
-            }
-
             runner.Spawn(resumeNO,
                 position: resumeNO.transform.position,
                 rotation: resumeNO.transform.rotation,
@@ -496,37 +461,6 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             );
             Debug.Log($"[HostMigration] Re-spawned object: {resumeNO.name}, InputAuthority={resumeNO.InputAuthority}");
         }
-    }
-
-    private static NetworkSceneInfo CreateSingleSceneInfo(string scenePath)
-    {
-        NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
-        sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath(scenePath)));
-        return sceneInfo;
-    }
-
-    private static Scene GetRunnerScene(NetworkRunner runner)
-    {
-        if (runner.SceneManager != null)
-        {
-            return runner.SceneManager.MainRunnerScene;
-        }
-
-        return SceneManager.GetActiveScene();
-    }
-
-    private static bool SceneMatchesPath(Scene scene, string expectedScenePath)
-    {
-        return scene.IsValid() &&
-               scene.isLoaded &&
-               string.Equals(scene.path, expectedScenePath, StringComparison.Ordinal);
-    }
-
-    private static bool ShouldRespawnForGameplayMigration(NetworkObject resumeNO)
-    {
-        return resumeNO.GetComponent<Player>() != null ||
-               resumeNO.GetComponent<KitchenObject>() != null ||
-               resumeNO.GetComponent<BaseCounter>() != null;
     }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
