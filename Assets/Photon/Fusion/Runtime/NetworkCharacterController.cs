@@ -127,9 +127,6 @@ namespace Fusion {
       moveVelocity.x = horizontalVel.x;
       moveVelocity.z = horizontalVel.z;
 
-      if (externalVelocity != default)
-        UnityEngine.Debug.Log($"[NCC] Move: externalVelocity={externalVelocity} | moveVelocity={moveVelocity} | combined={(moveVelocity + externalVelocity)} | deltaTime={deltaTime} | displacement={(moveVelocity + externalVelocity) * deltaTime}");
-
       _controller.Move((moveVelocity + externalVelocity) * deltaTime);
 
       if (lockYPosition) {
@@ -138,7 +135,12 @@ namespace Fusion {
         transform.position = pos;
       }
 
-      Data.Velocity = (transform.position - previousPos) * Runner.TickRate;
+      var actualVelocity = (transform.position - previousPos) * Runner.TickRate;
+      if (externalVelocity != default) {
+        actualVelocity -= externalVelocity;
+      }
+
+      Data.Velocity = actualVelocity;
       Data.Grounded = _controller.isGrounded;
 
       // Save client's simulation result from forward ticks

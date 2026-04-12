@@ -28,8 +28,12 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     private Vector3 lastInteractDir;
     private BaseCounter selectedCounter;
     private KitchenObject kitchenObject;
-    private Vector3 conveyorVelocity;
-    private int conveyorResetFrame = -1;
+    private CharacterController characterController;
+    private readonly Collider[] conveyorOverlapResults = new Collider[8];
+
+    private void Awake(){
+        characterController = GetComponent<CharacterController>();
+    }
 
     public static void ResetStaticData(){
         OnAnyPlayerSpawned = null;
@@ -118,26 +122,43 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
         Vector3 conveyorVel = GetConveyorVelocity();
-        if(conveyorVel != Vector3.zero)
-            Debug.Log($"[Player] HandleMovement: conveyorVel={conveyorVel} | moveDir={moveDir}");
-
         networkController.Move(moveDir, conveyorVel);
 
         IsWalking = moveDir != Vector3.zero;
     }
 
-    public void AccumulateConveyorVelocity(Vector3 velocity){
-        int frame = Time.frameCount;
-        if(frame != conveyorResetFrame){
-            conveyorVelocity = Vector3.zero;
-            conveyorResetFrame = frame;
-        }
-        conveyorVelocity += velocity;
-    }
-
     private Vector3 GetConveyorVelocity(){
-        if(Time.frameCount - conveyorResetFrame > 1)
-            return Vector3.zero;
+        Vector3 conveyorVelocity = Vector3.zero;
+        if(characterController == null){
+            return conveyorVelocity;
+        }
+
+        Bounds bounds = characterController.bounds;
+        float radius = Mathf.Max(0.01f, characterController.radius * 0.9f);
+        Vector3 capsuleOffset = Vector3.up * radius;
+        Vector3 bottom = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z) + capsuleOffset;
+        Vector3 top = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z) - capsuleOffset;
+
+        int hitCount = Physics.OverlapCapsuleNonAlloc(
+            bottom,
+            top,
+            radius,
+            conveyorOverlapResults,
+            ~0,
+            QueryTriggerInteraction.Collide
+        );
+
+        for(int i = 0; i < hitCount; i++){
+            Collider overlapCollider = conveyorOverlapResults[i];
+            if(overlapCollider == null){
+                continue;
+            }
+
+            if(overlapCollider.TryGetComponent(out ConveyorBelt conveyor)){
+                conveyorVelocity += conveyor.Velocity;
+            }
+        }
+
         return conveyorVelocity;
     }
 

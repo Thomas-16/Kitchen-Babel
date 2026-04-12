@@ -10,16 +10,6 @@ public class ConveyorBelt : MonoBehaviour
 
     private void Awake()
     {
-        pushDirection = transform.right.normalized;
-        Debug.Log($"[ConveyorBelt] Awake on '{gameObject.name}' | pushDirection={pushDirection} | speed={speed} | Velocity={Velocity}");
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.TryGetComponent<Player>(out Player player))
-        {
-            Debug.Log($"[ConveyorBelt] OnTriggerStay Player | Velocity={Velocity}");
-            player.AccumulateConveyorVelocity(Velocity);
-        }
+        pushDirection = -transform.right.normalized;
     }
 }
