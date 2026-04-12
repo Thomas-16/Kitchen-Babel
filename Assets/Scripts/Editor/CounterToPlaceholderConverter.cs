@@ -1,8 +1,16 @@
+using Fusion;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
 public class CounterToPlaceholderConverter : EditorWindow
 {
+    private static readonly FieldInfo CounterPrefabField =
+        typeof(CounterPlaceholder).GetField("counterPrefab", BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly FieldInfo IsShuffleableField =
+        typeof(CounterPlaceholder).GetField("isShuffleable", BindingFlags.NonPublic | BindingFlags.Instance);
+
     [MenuItem("Tools/Convert Counters to Placeholders")]
     public static void ShowWindow()
     {
@@ -20,8 +28,8 @@ public class CounterToPlaceholderConverter : EditorWindow
             "This tool finds all BaseCounter instances in the scene, creates CounterPlaceholder " +
             "GameObjects at the same positions, and removes the originals.\n\n" +
             "ContainerCounters are marked as Shuffleable.\n\n" +
-            "After conversion, you need to assign the NetworkPrefabRef on each placeholder " +
-            "in the Inspector (drag the counter prefab from Assets/Prefabs/Counters/).\n\n" +
+            "When the source counter came from a Fusion network prefab asset, the tool will " +
+            "auto-assign the placeholder's NetworkPrefabRef.\n\n" +
             "Placeholders are named after their counter type for easy identification.",
             MessageType.Info);
 
@@ -63,6 +71,8 @@ public class CounterToPlaceholderConverter : EditorWindow
         }
 
         int converted = 0;
+        int autoAssigned = 0;
+        List<string> unresolvedCounters = new List<string>();
 
         if (!dryRun)
         {
@@ -74,6 +84,7 @@ public class CounterToPlaceholderConverter : EditorWindow
             string counterType = counter.GetType().Name;
             string prefabName = GetSourcePrefabName(counter.gameObject);
             bool isShuffleable = counter is ContainerCounter;
+            bool hasPrefabRef = TryGetSourcePrefabRef(counter.gameObject, out NetworkPrefabRef counterPrefabRef, out string prefabRefIssue);
 
             string label = !string.IsNullOrEmpty(prefabName) ? prefabName : counterType;
 
@@ -82,7 +93,7 @@ public class CounterToPlaceholderConverter : EditorWindow
                 Debug.Log($"[Preview] {counter.gameObject.name} -> {label}_Placeholder " +
                           $"(pos={counter.transform.position}, rot={counter.transform.eulerAngles}" +
                           $"{(isShuffleable ? ", SHUFFLEABLE" : "")}) " +
-                          $"— Assign prefab: {label}");
+                          $"— PrefabRef: {(hasPrefabRef ? counterPrefabRef.ToString() : $"MISSING ({prefabRefIssue})")}");
                 continue;
             }
 
@@ -101,10 +112,18 @@ public class CounterToPlaceholderConverter : EditorWindow
             // Add CounterPlaceholder component
             CounterPlaceholder placeholder = placeholderGO.AddComponent<CounterPlaceholder>();
 
-            // Set shuffleable flag via SerializedObject
-            SerializedObject so = new SerializedObject(placeholder);
-            so.FindProperty("isShuffleable").boolValue = isShuffleable;
-            so.ApplyModifiedProperties();
+            IsShuffleableField?.SetValue(placeholder, isShuffleable);
+
+            if (hasPrefabRef)
+            {
+                CounterPrefabField?.SetValue(placeholder, counterPrefabRef);
+                EditorUtility.SetDirty(placeholder);
+                autoAssigned++;
+            }
+            else
+            {
+                unresolvedCounters.Add($"{counter.gameObject.name}: {prefabRefIssue}");
+            }
 
             // Destroy the original counter
             Undo.DestroyObjectImmediate(counter.gameObject);
@@ -119,7 +138,12 @@ public class CounterToPlaceholderConverter : EditorWindow
         else
         {
             Debug.Log($"[Converter] Converted {converted} counters to placeholders. " +
-                      "Now assign NetworkPrefabRef on each placeholder in the Inspector.");
+                      $"Auto-assigned prefab refs for {autoAssigned}/{converted} placeholders.");
+
+            foreach (string unresolved in unresolvedCounters)
+            {
+                Debug.LogWarning($"[Converter] Could not auto-assign prefab ref for {unresolved}");
+            }
         }
     }
 
@@ -131,5 +155,42 @@ public class CounterToPlaceholderConverter : EditorWindow
             return prefabSource.name;
         }
         return null;
+    }
+
+    private static bool TryGetSourcePrefabRef(GameObject instance, out NetworkPrefabRef prefabRef, out string issue)
+    {
+        GameObject prefabSource = PrefabUtility.GetCorrespondingObjectFromSource(instance);
+        if (prefabSource == null)
+        {
+            prefabRef = default;
+            issue = "object is not linked to a prefab asset";
+            return false;
+        }
+
+        NetworkObject networkObject = prefabSource.GetComponent<NetworkObject>();
+        if (networkObject == null)
+        {
+            prefabRef = default;
+            issue = "source prefab has no NetworkObject";
+            return false;
+        }
+
+        if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(networkObject, out string guidString, out long _))
+        {
+            prefabRef = default;
+            issue = "could not read prefab asset guid";
+            return false;
+        }
+
+        if (!NetworkObjectGuid.TryParse(guidString, out NetworkObjectGuid prefabGuid))
+        {
+            prefabRef = default;
+            issue = $"invalid network prefab guid: {guidString}";
+            return false;
+        }
+
+        prefabRef = (NetworkPrefabRef)prefabGuid;
+        issue = null;
+        return prefabRef.IsValid;
     }
 }
