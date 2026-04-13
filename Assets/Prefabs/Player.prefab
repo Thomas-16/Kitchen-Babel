@@ -58,7 +58,7 @@ MonoBehaviour:
     m_Bits: 64
   kitchenObjectHoldPoint: {fileID: 3111769404556278532}
   networkController: {fileID: 148173428634412195}
-  dashSpeed: 12
+  dashSpeed: 13
   dashDuration: 0.15
   dashCooldown: 2
   _IsWalking:

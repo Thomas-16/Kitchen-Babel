@@ -10,10 +10,8 @@ public class TutorialUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI keyMoveRightText;
     [SerializeField] private TextMeshProUGUI keyInteractText;
     [SerializeField] private TextMeshProUGUI keyInteractAlternateText;
-    [SerializeField] private TextMeshProUGUI keyPauseText;
     [SerializeField] private TextMeshProUGUI keyGamepadInteractText;
     [SerializeField] private TextMeshProUGUI keyGamepadInteractAlternateText;
-    [SerializeField] private TextMeshProUGUI keyGamepadPauseText;
 
     private void Start() {
         GameInput.Instance.OnBindingRebind += GameInput_OnBindingRebind;
@@ -41,10 +39,8 @@ public class TutorialUI : MonoBehaviour
         keyMoveRightText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Move_Right);
         keyInteractText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Interact);
         keyInteractAlternateText.text = GameInput.Instance.GetBindingText(GameInput.Binding.InteractAlternate);
-        keyPauseText.text = "Esc";
         keyGamepadInteractText.text = "A";
         keyGamepadInteractAlternateText.text = "X";
-        keyGamepadPauseText.text = "Start";
     }
 
     private void Show(){
