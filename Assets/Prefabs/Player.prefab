@@ -140,7 +140,7 @@ MonoBehaviour:
   acceleration: 110
   braking: 100
   maxSpeed: 8.5
-  rotationSpeed: 10
+  rotationSpeed: 9
   lockYPosition: 1
 --- !u!114 &8297200602717581531
 MonoBehaviour:
