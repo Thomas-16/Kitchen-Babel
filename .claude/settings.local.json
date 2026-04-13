@@ -39,7 +39,8 @@
       "Bash(sed -n '410,425p' \"S:/Programs/Unity/Projects/Kitchen Babel/Assets/Scenes/GameScene.unity\")",
       "Bash(sed -n '571,584p' \"S:/Programs/Unity/Projects/Kitchen Babel/Assets/Scenes/GameScene.unity\")",
       "Bash(sed -n '3074,3087p' \"S:/Programs/Unity/Projects/Kitchen Babel/Assets/Scenes/GameScene.unity\")",
-      "Bash(sed -n '3345,3358p' \"S:/Programs/Unity/Projects/Kitchen Babel/Assets/Scenes/GameScene.unity\")"
+      "Bash(sed -n '3345,3358p' \"S:/Programs/Unity/Projects/Kitchen Babel/Assets/Scenes/GameScene.unity\")",
+      "mcp__UnityMCP__find_in_file"
     ]
   }
 }
