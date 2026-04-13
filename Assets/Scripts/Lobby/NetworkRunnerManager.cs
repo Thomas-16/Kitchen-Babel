@@ -23,6 +23,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public bool IsHost => Runner != null && Runner.IsServer;
     public bool IsBusy { get; private set; }
     public int SelectedMapIndex { get; set; } = -1;
+    public int SelectedGameMode { get; private set; }
 
     private bool pendingLobbyManagerSpawn;
     private bool isMigrating;
@@ -102,10 +103,11 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    public async void CreateRoom(string roomName, string password, int maxPlayers)
+    public async void CreateRoom(string roomName, string password, int maxPlayers, int gameMode)
     {
         if (IsBusy) return;
         IsBusy = true;
+        SelectedGameMode = gameMode;
         bool shouldRejoinLobby = false;
         try
         {
@@ -124,6 +126,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
                 sessionProps["pw"] = 0;
             }
             sessionProps["gs"] = 0;
+            sessionProps["gm"] = gameMode;
 
             NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
             sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/MainMenuScene.unity")));
@@ -183,6 +186,15 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
             if (result.Ok)
             {
+                if (Runner.SessionInfo != null
+                    && Runner.SessionInfo.Properties.TryGetValue("gm", out SessionProperty gmProp))
+                {
+                    SelectedGameMode = (int)gmProp;
+                }
+                else
+                {
+                    SelectedGameMode = 0;
+                }
                 OnJoinedSession?.Invoke();
             }
             else
@@ -207,6 +219,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             await ShutdownRunner();
             SelectedMapIndex = -1;
+            SelectedGameMode = 0;
             OnDisconnected?.Invoke();
         }
         finally
@@ -222,8 +235,16 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (LobbyManager.Instance != null)
         {
+            if (LobbyManager.Instance.MatchMode == LobbyManager.MatchModeVersus
+                && !LobbyManager.Instance.AreTeamsValid())
+            {
+                Debug.LogWarning("[NRM] StartGame aborted — versus mode requires both teams to have at least 1 player.");
+                return;
+            }
+
             LobbyManager.Instance.SnapshotPlayerColors();
             SelectedMapIndex = LobbyManager.Instance.SelectedMapIndex;
+            SelectedGameMode = LobbyManager.Instance.MatchMode;
         }
 
         SetGameInSession(true);
@@ -296,6 +317,15 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             return (int)gsProp != 0;
         }
         return false;
+    }
+
+    public int GetSessionGameMode(SessionInfo session)
+    {
+        if (session.Properties.TryGetValue("gm", out SessionProperty gmProp))
+        {
+            return (int)gmProp;
+        }
+        return 0;
     }
 
     private void SetGameInSession(bool inSession)

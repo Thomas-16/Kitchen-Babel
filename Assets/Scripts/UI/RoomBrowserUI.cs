@@ -11,7 +11,8 @@ public class RoomBrowserUI : MonoBehaviour
     [SerializeField] private GameObject roomTemplatePrefab;
     [SerializeField] private NotificationManager incorrectPWNotification;
     [SerializeField] private ModalWindowManager roomBrowserModal;
-    [SerializeField] private ModalWindowManager preGameLobbyModal;
+    [SerializeField] private ModalWindowManager coopPregameLobbyModal;
+    [SerializeField] private ModalWindowManager versusPregameLobbyModal;
     [SerializeField] private ModalWindowManager createRoomModal;
 
     private void Start()
@@ -87,7 +88,10 @@ public class RoomBrowserUI : MonoBehaviour
     private void HandleJoinedSession()
     {
         if (roomBrowserModal != null) roomBrowserModal.CloseWindow();
-        if (preGameLobbyModal != null) preGameLobbyModal.OpenWindow();
+
+        int mode = NetworkRunnerManager.Instance != null ? NetworkRunnerManager.Instance.SelectedGameMode : 0;
+        ModalWindowManager target = mode == LobbyManager.MatchModeVersus ? versusPregameLobbyModal : coopPregameLobbyModal;
+        if (target != null) target.OpenWindow();
     }
 
     private void HandleJoinFailed(string reason)

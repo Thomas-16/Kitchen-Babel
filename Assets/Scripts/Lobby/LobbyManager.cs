@@ -6,17 +6,23 @@ using UnityEngine;
 
 public class LobbyManager : NetworkBehaviour
 {
+    public const int MatchModeCoop = 0;
+    public const int MatchModeVersus = 1;
+
     public static LobbyManager Instance { get; private set; }
 
-    [Networked, Capacity(6)] public NetworkLinkedList<LobbyPlayerData> Players => default;
+    [Networked, Capacity(10)] public NetworkLinkedList<LobbyPlayerData> Players => default;
     [Networked] public int PlayersVersion { get; set; }
     [Networked] public int SelectedMapIndex { get; set; } = -1;
+    [Networked] public int MatchMode { get; set; }
 
     public event Action OnPlayersChanged;
 
     // Static snapshots — survive scene transitions where LobbyManager is despawned
     private static Dictionary<PlayerRef, int> cachedPlayerColors = new Dictionary<PlayerRef, int>();
     private static Dictionary<PlayerRef, string> cachedPlayerNames = new Dictionary<PlayerRef, string>();
+    private static Dictionary<PlayerRef, int> cachedPlayerTeams = new Dictionary<PlayerRef, int>();
+    private static int cachedMatchMode;
 
     private ChangeDetector changeDetector;
     private int playerJoinCounter;
@@ -30,6 +36,13 @@ public class LobbyManager : NetworkBehaviour
 
         if (HasStateAuthority)
         {
+            // Pick up the mode selected at CreateRoom time. Fresh lobby: NRM carries it through.
+            // Host migration / return-from-game: CopyStateFrom already restored MatchMode so this is a no-op.
+            if (NetworkRunnerManager.Instance != null && Players.Count == 0)
+            {
+                MatchMode = NetworkRunnerManager.Instance.SelectedGameMode;
+            }
+
             // On migration, Players list is restored from snapshot — continue numbering from current count
             // On fresh start, Players.Count is 0 so this is equivalent to the old playerJoinCounter = 0
             playerJoinCounter = Players.Count;
@@ -114,7 +127,7 @@ public class LobbyManager : NetworkBehaviour
                     NetworkRunnerManager.Instance?.PushSnapshot();
                 }
             }
-            else if (propertyName == nameof(SelectedMapIndex))
+            else if (propertyName == nameof(SelectedMapIndex) || propertyName == nameof(MatchMode))
             {
                 if (HasStateAuthority)
                 {
@@ -135,16 +148,21 @@ public class LobbyManager : NetworkBehaviour
         }
 
         playerJoinCounter++;
+
+        int teamIndex = MatchMode == MatchModeVersus ? PickTeamForNewPlayer() : -1;
+        int colorIndex = GetNextAvailableColorOnTeam(Players.Count % 6, player, teamIndex);
+
         LobbyPlayerData playerData = new LobbyPlayerData
         {
             Player = player,
             PlayerName = $"Player {playerJoinCounter}",
             IsReady = false,
-            ColorIndex = GetNextAvailableColor(Players.Count % 6, player)
+            ColorIndex = colorIndex,
+            TeamIndex = teamIndex,
         };
         Players.Add(playerData);
         PlayersVersion++;
-        Debug.Log($"[LobbyManager] AddPlayer: {player}, PlayersVersion now={PlayersVersion}, Count={Players.Count}");
+        Debug.Log($"[LobbyManager] AddPlayer: {player}, team={teamIndex}, PlayersVersion now={PlayersVersion}, Count={Players.Count}");
     }
 
     public void RemovePlayer(PlayerRef player)
@@ -199,38 +217,83 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_SwitchTeam(PlayerRef player)
+    {
+        if (MatchMode != MatchModeVersus) return;
+
+        for (int i = 0; i < Players.Count; i++)
+        {
+            if (Players.Get(i).Player == player)
+            {
+                LobbyPlayerData data = Players.Get(i);
+                int newTeam = 1 - data.TeamIndex;
+                data.TeamIndex = newTeam;
+
+                if (IsColorTakenOnTeam(data.ColorIndex, player, newTeam))
+                {
+                    data.ColorIndex = GetNextAvailableColorOnTeam(data.ColorIndex + 1, player, newTeam);
+                }
+
+                Players.Set(i, data);
+                PlayersVersion++;
+                return;
+            }
+        }
+    }
+
     public bool IsColorTaken(int colorIndex, PlayerRef excludePlayer)
+    {
+        int team = GetPlayerTeamIndex(excludePlayer);
+        return IsColorTakenOnTeam(colorIndex, excludePlayer, team);
+    }
+
+    private bool IsColorTakenOnTeam(int colorIndex, PlayerRef excludePlayer, int teamIndex)
     {
         foreach (LobbyPlayerData data in Players)
         {
-            if (data.Player != excludePlayer && data.ColorIndex == colorIndex)
-                return true;
+            if (data.Player == excludePlayer) continue;
+            if (data.ColorIndex != colorIndex) continue;
+            if (MatchMode == MatchModeVersus && data.TeamIndex != teamIndex) continue;
+            return true;
         }
         return false;
     }
 
     public int GetNextAvailableColor(int startIndex, PlayerRef excludePlayer)
     {
-        int colorCount = 6;
-        for (int i = 0; i < colorCount; i++)
-        {
-            int candidate = (startIndex + i) % colorCount;
-            if (!IsColorTaken(candidate, excludePlayer))
-                return candidate;
-        }
-        return startIndex;
+        int team = GetPlayerTeamIndex(excludePlayer);
+        return GetNextAvailableColorOnTeam(startIndex, excludePlayer, team);
     }
 
     public int GetPrevAvailableColor(int startIndex, PlayerRef excludePlayer)
+    {
+        int team = GetPlayerTeamIndex(excludePlayer);
+        return GetPrevAvailableColorOnTeam(startIndex, excludePlayer, team);
+    }
+
+    private int GetNextAvailableColorOnTeam(int startIndex, PlayerRef excludePlayer, int teamIndex)
+    {
+        int colorCount = 6;
+        for (int i = 0; i < colorCount; i++)
+        {
+            int candidate = ((startIndex + i) % colorCount + colorCount) % colorCount;
+            if (!IsColorTakenOnTeam(candidate, excludePlayer, teamIndex))
+                return candidate;
+        }
+        return ((startIndex % colorCount) + colorCount) % colorCount;
+    }
+
+    private int GetPrevAvailableColorOnTeam(int startIndex, PlayerRef excludePlayer, int teamIndex)
     {
         int colorCount = 6;
         for (int i = 0; i < colorCount; i++)
         {
             int candidate = ((startIndex - i) % colorCount + colorCount) % colorCount;
-            if (!IsColorTaken(candidate, excludePlayer))
+            if (!IsColorTakenOnTeam(candidate, excludePlayer, teamIndex))
                 return candidate;
         }
-        return startIndex;
+        return ((startIndex % colorCount) + colorCount) % colorCount;
     }
 
     public int GetPlayerColorIndex(PlayerRef player)
@@ -240,6 +303,32 @@ public class LobbyManager : NetworkBehaviour
             if (data.Player == player) return data.ColorIndex;
         }
         return 0;
+    }
+
+    public int GetPlayerTeamIndex(PlayerRef player)
+    {
+        foreach (LobbyPlayerData data in Players)
+        {
+            if (data.Player == player) return data.TeamIndex;
+        }
+        return -1;
+    }
+
+    public int GetTeamCount(int teamIndex)
+    {
+        int count = 0;
+        foreach (LobbyPlayerData data in Players)
+        {
+            if (data.TeamIndex == teamIndex) count++;
+        }
+        return count;
+    }
+
+    private int PickTeamForNewPlayer()
+    {
+        int countA = GetTeamCount(0);
+        int countB = GetTeamCount(1);
+        return countA <= countB ? 0 : 1;
     }
 
     public static int GetCachedPlayerColorIndex(PlayerRef player)
@@ -256,14 +345,26 @@ public class LobbyManager : NetworkBehaviour
         return "";
     }
 
+    public static int GetCachedPlayerTeamIndex(PlayerRef player)
+    {
+        if (cachedPlayerTeams.TryGetValue(player, out int teamIndex))
+            return teamIndex;
+        return -1;
+    }
+
+    public static int GetCachedMatchMode() => cachedMatchMode;
+
     public void SnapshotPlayerColors()
     {
         cachedPlayerColors.Clear();
         cachedPlayerNames.Clear();
+        cachedPlayerTeams.Clear();
+        cachedMatchMode = MatchMode;
         foreach (LobbyPlayerData data in Players)
         {
             cachedPlayerColors[data.Player] = data.ColorIndex;
             cachedPlayerNames[data.Player] = data.PlayerName.ToString();
+            cachedPlayerTeams[data.Player] = data.TeamIndex;
         }
     }
 
@@ -308,5 +409,11 @@ public class LobbyManager : NetworkBehaviour
             if (!data.IsReady) return false;
         }
         return true;
+    }
+
+    public bool AreTeamsValid()
+    {
+        if (MatchMode != MatchModeVersus) return true;
+        return GetTeamCount(0) > 0 && GetTeamCount(1) > 0;
     }
 }

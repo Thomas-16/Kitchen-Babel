@@ -18,7 +18,9 @@ public class RoomEntryUI : MonoBehaviour
         this.session = session;
         this.roomBrowserUI = roomBrowserUI;
 
-        roomNameText.text = session.Name;
+        int gameMode = NetworkRunnerManager.Instance.GetSessionGameMode(session);
+        string modeLabel = gameMode == LobbyManager.MatchModeVersus ? "Versus" : "Co-op";
+        roomNameText.text = $"{session.Name} | {modeLabel} Mode";
         bool isPrivate = NetworkRunnerManager.Instance.SessionHasPassword(session);
         string privacyLabel = isPrivate ? "Private" : "Public";
         bool isInGame = NetworkRunnerManager.Instance.SessionIsInGame(session);

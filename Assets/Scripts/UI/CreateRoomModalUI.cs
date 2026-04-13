@@ -14,6 +14,7 @@ public class CreateRoomModalUI : MonoBehaviour
     [SerializeField] private RectTransform layoutRoot;
 
     private int selectedMaxPlayers = 2;
+    private int selectedGameMode = 0;
     private bool requirePassword = false;
     private bool isCreating = false;
     private Coroutine invalidPasswordCoroutine;
@@ -40,6 +41,11 @@ public class CreateRoomModalUI : MonoBehaviour
     public void OnMaxPlayersChanged(int index)
     {
         selectedMaxPlayers = index + 2;
+    }
+
+    public void OnGameModeChanged(int index)
+    {
+        selectedGameMode = index;
     }
 
     public void OnRequirePasswordChanged(bool value)
@@ -74,7 +80,7 @@ public class CreateRoomModalUI : MonoBehaviour
         string roomName = playerName + "'s Room";
         string password = requirePassword && passwordInputField != null ? passwordInputField.text : "";
 
-        NetworkRunnerManager.Instance.CreateRoom(roomName, password, selectedMaxPlayers);
+        NetworkRunnerManager.Instance.CreateRoom(roomName, password, selectedMaxPlayers, selectedGameMode);
     }
 
     private void HandleJoinedSession()
@@ -91,6 +97,7 @@ public class CreateRoomModalUI : MonoBehaviour
     private void ResetState()
     {
         selectedMaxPlayers = 2;
+        selectedGameMode = 0;
         requirePassword = false;
         isCreating = false;
         if (passwordInputContainer != null) passwordInputContainer.SetActive(false);

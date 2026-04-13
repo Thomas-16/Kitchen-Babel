@@ -8,7 +8,8 @@ public class MainMenuUI : MonoBehaviour
 {
     [SerializeField] private ModalWindowManager inputNameModal;
     [SerializeField] private ModalWindowManager roomBrowserModal;
-    [SerializeField] private ModalWindowManager preGameLobbyModal;
+    [SerializeField] private ModalWindowManager coopPregameLobbyModal;
+    [SerializeField] private ModalWindowManager versusPregameLobbyModal;
     [SerializeField] private TMP_InputField nameInputField;
     [SerializeField] private TextMeshProUGUI usernameDisplayText;
     [SerializeField] private GameObject invalidNameText;
@@ -48,10 +49,17 @@ public class MainMenuUI : MonoBehaviour
 
     private void Start()
     {
-        if (returningFromGame && preGameLobbyModal != null)
+        if (returningFromGame)
         {
-            preGameLobbyModal.OpenWindow();
+            ModalWindowManager target = GetPregameModalForCurrentMode();
+            if (target != null) target.OpenWindow();
         }
+    }
+
+    private ModalWindowManager GetPregameModalForCurrentMode()
+    {
+        int mode = NetworkRunnerManager.Instance != null ? NetworkRunnerManager.Instance.SelectedGameMode : 0;
+        return mode == LobbyManager.MatchModeVersus ? versusPregameLobbyModal : coopPregameLobbyModal;
     }
 
     public void OnPlayButtonClicked()
