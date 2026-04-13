@@ -13,22 +13,51 @@ public class PreGameLobbyUI : MonoBehaviour
     [SerializeField] private Image characterPreviewImage;
     [SerializeField] private HorizontalSelector colorSelector;
     [SerializeField] private PlayerColorDataSO playerColorDataSO;
+    [SerializeField] private Michsky.UI.Heat.Dropdown mapDropdown;
+    [SerializeField] private GameObject mapSelectorText;
+    [SerializeField] private MapListSO mapList;
 
     private const string ColorPrefsKey = "HorizontalSelector_PlayerColor";
 
     private int lastSeenVersion = -1;
+    private int lastSeenMapIndex = -2;
     private bool hasSetName = false;
     private int previousColorIndex = -1;
 
     private void Start()
     {
         NetworkRunnerManager.Instance.OnDisconnected += HandleDisconnected;
+        PopulateMapDropdown();
+    }
+
+    private void PopulateMapDropdown()
+    {
+        if (mapDropdown == null || mapList == null) return;
+        mapDropdown.items.Clear();
+        mapDropdown.CreateNewItem("Random", false);
+        foreach (MapConfigSO map in mapList.maps)
+        {
+            mapDropdown.CreateNewItem(map.mapName, false);
+        }
+        mapDropdown.Initialize();
+    }
+
+    private void SyncMapDropdown(int mapIndex)
+    {
+        if (mapDropdown == null) return;
+        int uiIndex = mapIndex < 0 ? 0 : mapIndex + 1;
+        if (uiIndex < 0 || uiIndex >= mapDropdown.items.Count) uiIndex = 0;
+        if (mapDropdown.selectedItemIndex != uiIndex)
+        {
+            mapDropdown.SetDropdownIndex(uiIndex);
+        }
     }
 
     private void OnEnable()
     {
         hasSetName = false;
         lastSeenVersion = -1;
+        lastSeenMapIndex = -2;
         int savedColor = PlayerPrefs.GetInt(ColorPrefsKey, 0);
         UpdatePreviewImage(savedColor);
     }
@@ -55,6 +84,12 @@ public class PreGameLobbyUI : MonoBehaviour
 
             int savedColor = PlayerPrefs.GetInt(ColorPrefsKey, 0);
             OnColorChanged(savedColor);
+        }
+
+        if (LobbyManager.Instance.SelectedMapIndex != lastSeenMapIndex)
+        {
+            lastSeenMapIndex = LobbyManager.Instance.SelectedMapIndex;
+            SyncMapDropdown(lastSeenMapIndex);
         }
 
         if (LobbyManager.Instance.PlayersVersion == lastSeenVersion) return;
@@ -131,6 +166,16 @@ public class PreGameLobbyUI : MonoBehaviour
         bool allReady = LobbyManager.Instance != null && LobbyManager.Instance.AreAllPlayersReady();
 
         startButtonObject.SetActive(isHost && allReady);
+
+        if (mapDropdown != null)
+        {
+            mapDropdown.gameObject.SetActive(isHost);
+        }
+
+        if (mapSelectorText != null)
+        {
+            mapSelectorText.SetActive(isHost);
+        }
     }
 
     public void OnReadyUpClicked()
@@ -154,6 +199,15 @@ public class PreGameLobbyUI : MonoBehaviour
     {
         if (NetworkRunnerManager.Instance.IsBusy) return;
         NetworkRunnerManager.Instance.StartGame();
+    }
+
+    public void OnMapChanged(int dropdownIndex)
+    {
+        int mapIndex = dropdownIndex <= 0 ? -1 : dropdownIndex - 1;
+        if (LobbyManager.Instance != null && LobbyManager.Instance.HasStateAuthority)
+        {
+            LobbyManager.Instance.SelectedMapIndex = mapIndex;
+        }
     }
 
     public void OnColorChanged(int index)

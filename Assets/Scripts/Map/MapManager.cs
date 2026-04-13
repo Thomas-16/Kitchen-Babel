@@ -31,7 +31,12 @@ public class MapManager : NetworkBehaviour
             // Only pick a new map if this is a fresh game (not host migration restoring state)
             if (MapIndex < 0)
             {
-                MapIndex = UnityEngine.Random.Range(0, mapList.maps.Count);
+                int chosen = NetworkRunnerManager.Instance != null
+                    ? NetworkRunnerManager.Instance.SelectedMapIndex
+                    : -1;
+                MapIndex = (chosen >= 0 && chosen < mapList.maps.Count)
+                    ? chosen
+                    : UnityEngine.Random.Range(0, mapList.maps.Count);
                 RandomSeed = UnityEngine.Random.Range(1, int.MaxValue);
             }
         }

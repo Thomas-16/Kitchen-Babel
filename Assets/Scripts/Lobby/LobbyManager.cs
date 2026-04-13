@@ -10,6 +10,7 @@ public class LobbyManager : NetworkBehaviour
 
     [Networked, Capacity(6)] public NetworkLinkedList<LobbyPlayerData> Players => default;
     [Networked] public int PlayersVersion { get; set; }
+    [Networked] public int SelectedMapIndex { get; set; } = -1;
 
     public event Action OnPlayersChanged;
 
@@ -40,6 +41,15 @@ public class LobbyManager : NetworkBehaviour
             foreach (PlayerRef player in Runner.ActivePlayers)
             {
                 AddPlayer(player);
+            }
+
+            // Restore map selection on return-from-game: fresh LobbyManager defaults to -1,
+            // but NRM retained the previous selection on the host's machine. On host migration
+            // CopyStateFrom already populated SelectedMapIndex so this no-ops.
+            if (SelectedMapIndex < 0 && NetworkRunnerManager.Instance != null
+                && NetworkRunnerManager.Instance.SelectedMapIndex >= 0)
+            {
+                SelectedMapIndex = NetworkRunnerManager.Instance.SelectedMapIndex;
             }
 
             needsDeferredSync = true;
@@ -99,6 +109,13 @@ public class LobbyManager : NetworkBehaviour
 
                 // Preserve lobby state (ready, color, name) across host migration by refreshing
                 // the Photon snapshot whenever the authoritative Players list mutates.
+                if (HasStateAuthority)
+                {
+                    NetworkRunnerManager.Instance?.PushSnapshot();
+                }
+            }
+            else if (propertyName == nameof(SelectedMapIndex))
+            {
                 if (HasStateAuthority)
                 {
                     NetworkRunnerManager.Instance?.PushSnapshot();

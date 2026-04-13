@@ -22,6 +22,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public List<SessionInfo> CachedSessionList { get; private set; } = new List<SessionInfo>();
     public bool IsHost => Runner != null && Runner.IsServer;
     public bool IsBusy { get; private set; }
+    public int SelectedMapIndex { get; set; } = -1;
 
     private bool pendingLobbyManagerSpawn;
     private bool isMigrating;
@@ -205,6 +206,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         try
         {
             await ShutdownRunner();
+            SelectedMapIndex = -1;
             OnDisconnected?.Invoke();
         }
         finally
@@ -221,6 +223,7 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         if (LobbyManager.Instance != null)
         {
             LobbyManager.Instance.SnapshotPlayerColors();
+            SelectedMapIndex = LobbyManager.Instance.SelectedMapIndex;
         }
 
         SetGameInSession(true);
