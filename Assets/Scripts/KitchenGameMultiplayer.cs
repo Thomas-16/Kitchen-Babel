@@ -169,6 +169,9 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
         if(GameInput.Instance.GetInteractAlternatePressed()){
             playerInput.buttons.Set(InputButton.InteractAlternate, true);
         }
+        if(GameInput.Instance.GetDashPressed()){
+            playerInput.buttons.Set(InputButton.Dash, true);
+        }
 
         if(Player.LocalInstance != null){
             playerInput.position = Player.LocalInstance.transform.position;

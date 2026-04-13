@@ -5,6 +5,7 @@ public enum InputButton
 {
     Interact,
     InteractAlternate,
+    Dash,
 }
 
 public struct PlayerNetworkInput : INetworkInput

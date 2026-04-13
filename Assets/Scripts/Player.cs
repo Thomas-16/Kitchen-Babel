@@ -20,10 +20,19 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
     [SerializeField] private NetworkCharacterController networkController;
 
+    [SerializeField] private float dashSpeed = 10f;
+    [SerializeField] private float dashDuration = 0.15f;
+    [SerializeField] private float dashCooldown = 1f;
+
     [Networked] public NetworkBool IsWalking { get; set; }
     [Networked] public int ColorIndex { get; set; }
     [Networked] public NetworkString<_32> PlayerName { get; set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
+    [Networked] private TickTimer DashTimer { get; set; }
+    [Networked] private TickTimer DashCooldownTimer { get; set; }
+    [Networked] private Vector3 DashDirection { get; set; }
+
+    private ChangeDetector changeDetector;
 
     private Vector3 lastInteractDir;
     private BaseCounter selectedCounter;
@@ -48,10 +57,23 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
     public override void Spawned(){
         Debug.Log($"[Player] Spawned! HasInputAuthority={HasInputAuthority}, HasStateAuthority={HasStateAuthority}, InputAuthority={Object.InputAuthority}");
+        changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
+
         if(HasInputAuthority){
             LocalInstance = this;
 
             OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public override void Render(){
+        if(changeDetector == null) return;
+        foreach(var change in changeDetector.DetectChanges(this)){
+            if(change == nameof(DashCooldownTimer)){
+                if(SoundManager.Instance != null){
+                    SoundManager.Instance.PlayDashSound(transform.position);
+                }
+            }
         }
     }
 
@@ -69,6 +91,17 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
                 networkController.SetPosition(input.position, input.rotation);
             }
 
+            NetworkButtons pressed = input.buttons.GetPressed(PreviousButtons);
+            PreviousButtons = input.buttons;
+
+            if(pressed.IsSet(InputButton.Dash) && DashCooldownTimer.ExpiredOrNotRunning(Runner)){
+                Vector3 dir = new Vector3(input.moveDirection.x, 0f, input.moveDirection.y);
+                if(dir.sqrMagnitude < 0.01f) dir = transform.forward;
+                DashDirection = dir.normalized;
+                DashTimer = TickTimer.CreateFromSeconds(Runner, dashDuration);
+                DashCooldownTimer = TickTimer.CreateFromSeconds(Runner, dashCooldown);
+            }
+
             HandleMovement(input);
 
             // Only run raycasts on forward ticks, not during resimulation.
@@ -80,7 +113,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
             // Only host executes interactions (spawn/modify networked objects)
             if(Object.HasStateAuthority){
-                NetworkButtons pressed = input.buttons.GetPressed(PreviousButtons);
                 if(pressed.IsSet(InputButton.Interact)){
                     if(selectedCounter != null){
                         selectedCounter.Interact(this);
@@ -91,7 +123,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
                         selectedCounter.InteractAlternate(this);
                     }
                 }
-                PreviousButtons = input.buttons;
             }
         }
     }
@@ -122,7 +153,8 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
         Vector3 conveyorVel = GetConveyorVelocity();
-        networkController.Move(moveDir, conveyorVel);
+        Vector3 dashVel = DashTimer.ExpiredOrNotRunning(Runner) ? Vector3.zero : DashDirection * dashSpeed;
+        networkController.Move(moveDir, conveyorVel + dashVel);
 
         IsWalking = moveDir != Vector3.zero;
     }

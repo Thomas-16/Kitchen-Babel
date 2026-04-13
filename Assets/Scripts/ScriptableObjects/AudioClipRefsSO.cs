@@ -5,6 +5,7 @@ using UnityEngine;
 public class AudioClipRefsSO : ScriptableObject
 {
     public AudioClip[] chop;
+    public AudioClip[] dash;
     public AudioClip[] deliveryFailed;
     public AudioClip[] deliverySuccess;
     public AudioClip[] footstep;

@@ -21,7 +21,7 @@ public class SettingsWiring : MonoBehaviour
 
     private static readonly string[] bindingNames = {
         "Move Up", "Move Down", "Move Left", "Move Right",
-        "Interact", "Interact Alternate"
+        "Interact", "Interact Alternate", "Dash"
     };
 
     private static readonly int[] frameRateValues = { -1, 30, 60, 144, 240 };
@@ -218,6 +218,10 @@ public class SettingsWiring : MonoBehaviour
                 break;
             case GameInput.Binding.InteractAlternate:
                 inputAction = playerInputActions.Player.InteractAlternate;
+                bindingIndex = 0;
+                break;
+            case GameInput.Binding.Dash:
+                inputAction = playerInputActions.Player.Dash;
                 bindingIndex = 0;
                 break;
         }

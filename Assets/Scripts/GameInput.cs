@@ -10,6 +10,7 @@ public class GameInput : MonoBehaviour
 
     public event EventHandler OnInteractAction;
     public event EventHandler OnInteractAlternateAction;
+    public event EventHandler OnDashAction;
     public event EventHandler OnBindingRebind;
 
     public enum Binding{
@@ -19,11 +20,13 @@ public class GameInput : MonoBehaviour
         Move_Right,
         Interact,
         InteractAlternate,
+        Dash,
     }
 
     private PlayerInputActions playerInputActions;
     private bool interactPressed;
     private bool interactAlternatePressed;
+    private bool dashPressed;
 
     private void Awake() {
         Instance = this;
@@ -38,12 +41,18 @@ public class GameInput : MonoBehaviour
 
         playerInputActions.Player.Interact.performed += Interact_performed;
         playerInputActions.Player.InteractAlternate.performed += InteractAlternate_performed;
+        playerInputActions.Player.Dash.performed += Dash_performed;
     }
     private void OnDestroy() {
         playerInputActions.Player.Interact.performed -= Interact_performed;
         playerInputActions.Player.InteractAlternate.performed -= InteractAlternate_performed;
+        playerInputActions.Player.Dash.performed -= Dash_performed;
 
         playerInputActions.Dispose();
+    }
+    private void Dash_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj){
+        OnDashAction?.Invoke(this, EventArgs.Empty);
+        dashPressed = true;
     }
     private void InteractAlternate_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj){
         OnInteractAlternateAction?.Invoke(this, EventArgs.Empty);
@@ -63,6 +72,12 @@ public class GameInput : MonoBehaviour
     public bool GetInteractAlternatePressed(){
         bool pressed = interactAlternatePressed;
         interactAlternatePressed = false;
+        return pressed;
+    }
+
+    public bool GetDashPressed(){
+        bool pressed = dashPressed;
+        dashPressed = false;
         return pressed;
     }
 
@@ -89,6 +104,8 @@ public class GameInput : MonoBehaviour
                 return playerInputActions.Player.Interact.bindings[0].ToDisplayString();
             case Binding.InteractAlternate:
                 return playerInputActions.Player.InteractAlternate.bindings[0].ToDisplayString();
+            case Binding.Dash:
+                return playerInputActions.Player.Dash.bindings[0].ToDisplayString();
         }
     }
     public void RebindBinding(Binding binding, Action onActionRebound){
@@ -121,6 +138,10 @@ public class GameInput : MonoBehaviour
                 break;
             case Binding.InteractAlternate:
                 inputAction = playerInputActions.Player.InteractAlternate;
+                bindingIndex = 0;
+                break;
+            case Binding.Dash:
+                inputAction = playerInputActions.Player.Dash;
                 bindingIndex = 0;
                 break;
         }

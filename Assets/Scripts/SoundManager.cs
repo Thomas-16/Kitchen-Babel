@@ -77,6 +77,10 @@ public class SoundManager : MonoBehaviour
     public void PlayFootstepSound(Vector3 position, float volume){
         PlaySound(audioClipRefsSO.footstep, position, volume);
     }
+    public void PlayDashSound(Vector3 position){
+        if(audioClipRefsSO.dash == null || audioClipRefsSO.dash.Length == 0) return;
+        PlaySound(audioClipRefsSO.dash, position);
+    }
     public void PlayCountDownSound(){
         PlaySound(audioClipRefsSO.warning, Vector3.zero);
     }

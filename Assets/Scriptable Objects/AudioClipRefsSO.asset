@@ -16,6 +16,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: e519f586b4ac0904e877dfab85ed729e, type: 3}
   - {fileID: 8300000, guid: 9c6157275e190604d8136e7e497e941e, type: 3}
   - {fileID: 8300000, guid: 99c666127ba3b974c99980d14efcf03c, type: 3}
+  dash:
+  - {fileID: 8300000, guid: 5434f58f382f1ae41b633fd37b545f9d, type: 3}
   deliveryFailed:
   - {fileID: 8300000, guid: 400611abd7434234993616a86c030d1e, type: 3}
   - {fileID: 8300000, guid: 6a936576e1e30a640844535c71d5a149, type: 3}
