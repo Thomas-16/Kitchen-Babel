@@ -6,14 +6,7 @@ using UnityEngine;
 public class VersusMatchManager : NetworkBehaviour
 {
     public const int TeamCount = 2;
-    public const int StartingHearts = 3;
-    public const int StartingMoney = 0;
-
     public const int OrderCapacity = 6;
-    public const int InitialNaturalOrders = 2;
-    public const float NaturalOrderIntervalSeconds = 15f;
-    public const float OrderExpiryDurationSeconds = 50f;
-    public const int WrongDeliveryMoneyPenalty = 50;
 
     public static VersusMatchManager Instance { get; private set; }
     public static event EventHandler OnInstanceReady;
@@ -48,6 +41,16 @@ public class VersusMatchManager : NetworkBehaviour
     }
 
     [SerializeField] private RecipeListSO recipeListSO;
+
+    [Header("Match Tuning")]
+    [SerializeField] private int startingHearts = 3;
+    [SerializeField] private int startingMoney = 0;
+    [SerializeField] private int initialNaturalOrders = 2;
+    [SerializeField] private float naturalOrderIntervalSeconds = 15f;
+    [SerializeField] private float orderExpiryDurationSeconds = 50f;
+    [SerializeField] private int wrongDeliveryMoneyPenalty = 50;
+
+    public float OrderExpiryDurationSeconds => orderExpiryDurationSeconds;
 
     [Header("Anti-Snowball Tuning")]
     [SerializeField] private int heartLossMoneyBonus = 30;
@@ -84,8 +87,8 @@ public class VersusMatchManager : NetworkBehaviour
         {
             for (int i = 0; i < TeamCount; i++)
             {
-                TeamHearts.Set(i, StartingHearts);
-                TeamMoney.Set(i, StartingMoney);
+                TeamHearts.Set(i, startingHearts);
+                TeamMoney.Set(i, startingMoney);
                 TeamSuccessfulRecipes.Set(i, 0);
             }
             WinningTeamIndex = -1;
@@ -147,11 +150,11 @@ public class VersusMatchManager : NetworkBehaviour
         if (!KitchenGameManager.Instance.IsGamePlaying()) return;
         if (WinningTeamIndex != -1) return;
 
-        int intervalTicks = Mathf.Max(1, Mathf.RoundToInt(NaturalOrderIntervalSeconds / Runner.DeltaTime));
+        int intervalTicks = Mathf.Max(1, Mathf.RoundToInt(naturalOrderIntervalSeconds / Runner.DeltaTime));
 
         if (NextOrderSpawnTick == 0)
         {
-            for (int i = 0; i < InitialNaturalOrders; i++)
+            for (int i = 0; i < initialNaturalOrders; i++)
             {
                 SpawnNaturalOrderForBothTeams();
             }
@@ -374,7 +377,7 @@ public class VersusMatchManager : NetworkBehaviour
         }
 
         // No match — wrong delivery.
-        DeductMoney(teamIndex, WrongDeliveryMoneyPenalty);
+        DeductMoney(teamIndex, wrongDeliveryMoneyPenalty);
         DeductHeart(teamIndex);
         RPC_OnDeliveryAttempted(teamIndex, false);
     }

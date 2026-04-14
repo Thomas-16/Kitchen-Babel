@@ -81,7 +81,7 @@ public class VersusDeliveryManagerUI : MonoBehaviour
 
         NetworkRunner runner = GetRunner();
         int totalDurationTicks = runner != null
-            ? Mathf.RoundToInt(VersusMatchManager.OrderExpiryDurationSeconds / runner.DeltaTime)
+            ? Mathf.RoundToInt(VersusMatchManager.Instance.OrderExpiryDurationSeconds / runner.DeltaTime)
             : 1;
 
         var orders = VersusMatchManager.Instance.GetTeamOrders(localTeam);

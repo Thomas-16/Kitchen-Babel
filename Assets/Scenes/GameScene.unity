@@ -2954,7 +2954,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VersusMatchManager
   recipeListSO: {fileID: 11400000, guid: 28a55dd3f3da1914086acfcb72e26e80, type: 2}
-  heartLossMoneyBonus: 20
+  startingHearts: 3
+  startingMoney: 0
+  initialNaturalOrders: 2
+  naturalOrderIntervalSeconds: 15
+  orderExpiryDurationSeconds: 45
+  wrongDeliveryMoneyPenalty: 60
+  heartLossMoneyBonus: 30
   heartLossOrderPauseSeconds: 8
   heartLossSabotageShieldSeconds: 8
   _TeamHearts: 
