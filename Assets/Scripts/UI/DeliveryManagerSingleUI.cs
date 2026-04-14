@@ -17,9 +17,35 @@ public class DeliveryManagerSingleUI : MonoBehaviour
     private int expirationTick;
     private int totalDurationTicks;
     private bool timerActive;
+    private float[] barLengths;
+    private float[] cumulativeLengthBefore;
+    private float totalBarLength;
 
     private void Awake() {
         iconTemplate.gameObject.SetActive(false);
+        CacheBarLengths();
+    }
+
+    private void CacheBarLengths() {
+        if (countdownBars == null || countdownBars.Length == 0) return;
+        barLengths = new float[countdownBars.Length];
+        cumulativeLengthBefore = new float[countdownBars.Length];
+        totalBarLength = 0f;
+        for (int i = 0; i < countdownBars.Length; i++) {
+            Image bar = countdownBars[i];
+            float length = 0f;
+            if (bar != null) {
+                Rect rect = bar.rectTransform.rect;
+                switch (bar.fillMethod) {
+                    case Image.FillMethod.Horizontal: length = rect.width; break;
+                    case Image.FillMethod.Vertical: length = rect.height; break;
+                    default: length = Mathf.Max(rect.width, rect.height); break;
+                }
+            }
+            barLengths[i] = length;
+            cumulativeLengthBefore[i] = totalBarLength;
+            totalBarLength += length;
+        }
     }
     public void SetRecipeSO(RecipeSO recipeSO){
         recipeNameText.text = recipeSO.recipeName;
@@ -63,10 +89,20 @@ public class DeliveryManagerSingleUI : MonoBehaviour
 
     private void UpdateCountdownFill() {
         if (countdownBars == null || countdownBars.Length == 0) return;
+        if (barLengths == null || barLengths.Length != countdownBars.Length) CacheBarLengths();
+        if (totalBarLength <= 0f) return;
+
         float remainingTicks = expirationTick - runner.Tick;
-        float fill = Mathf.Clamp01(remainingTicks / (float)totalDurationTicks);
-        foreach (Image bar in countdownBars) {
-            if (bar != null) bar.fillAmount = fill;
+        float remainingFraction = Mathf.Clamp01(remainingTicks / (float)totalDurationTicks);
+        float remainingLength = remainingFraction * totalBarLength;
+
+        for (int i = 0; i < countdownBars.Length; i++) {
+            Image bar = countdownBars[i];
+            if (bar == null) continue;
+            float barLength = barLengths[i];
+            if (barLength <= 0f) { bar.fillAmount = 0f; continue; }
+            float fillLen = Mathf.Clamp(remainingLength - cumulativeLengthBefore[i], 0f, barLength);
+            bar.fillAmount = fillLen / barLength;
         }
     }
 }
