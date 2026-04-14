@@ -26,6 +26,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
     [Networked] public NetworkBool IsWalking { get; set; }
     [Networked] public int ColorIndex { get; set; }
+    [Networked] public int TeamIndex { get; set; } = -1;
     [Networked] public NetworkString<_32> PlayerName { get; set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
     [Networked] private TickTimer DashTimer { get; set; }
@@ -137,7 +138,9 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         float interactDistance = 2f;
         if(Physics.Raycast(transform.position, lastInteractDir, out RaycastHit raycastHit, interactDistance, countersLayerMask)){
             if(raycastHit.transform.TryGetComponent(out BaseCounter baseCounter)){
-                if(baseCounter != selectedCounter){
+                if(TeamIndex != -1 && baseCounter.TeamIndex != -1 && baseCounter.TeamIndex != TeamIndex){
+                    SetSelectedCounter(null);
+                }else if(baseCounter != selectedCounter){
                     SetSelectedCounter(baseCounter);
                 }
             }else{

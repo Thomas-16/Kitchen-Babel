@@ -14,6 +14,7 @@ public class BaseCounter : NetworkBehaviour, IKitchenObjectParent
 
     [Networked] public Vector3 SpawnPosition { get; set; }
     [Networked] public Quaternion SpawnRotation { get; set; }
+    [Networked] public int TeamIndex { get; set; } = -1;
 
     private KitchenObject kitchenObject;
     private bool hasAppliedSpawnTransform;

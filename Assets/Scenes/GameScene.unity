@@ -2184,6 +2184,75 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &846354830
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 846354832}
+  - component: {fileID: 846354833}
+  - component: {fileID: 846354831}
+  m_Layer: 0
+  m_Name: VersusMatchManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &846354831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 846354830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fef5e10e1c620804bbfef543e69d9342, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VersusMatchManager
+  _TeamHearts: 
+  _TeamMoney: 
+  _WinningTeamIndex: -1
+  _TeamAOrders: 
+  _TeamBOrders: 
+--- !u!4 &846354832
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 846354830}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &846354833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 846354830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2856268793
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 846354831}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &865073033
 GameObject:
   m_ObjectHideFlags: 0
@@ -3450,9 +3519,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
   mapList: {fileID: 11400000, guid: 709bc8887cfe27441a561f1829df9269, type: 2}
+  virtualCamera: {fileID: 1686197247}
   _MapIndex: -1
   _RandomSeed: 0
   _MapReady:
+    _value: 0
+  _IsVersus:
     _value: 0
 --- !u!114 &1436099091
 MonoBehaviour:
@@ -3797,6 +3869,7 @@ MonoBehaviour:
   _NetworkedState: 0
   _CountdownTimer: 0
   _GamePlayingTimer: 0
+  _VersusWinningTeamIndex: -1
 --- !u!4 &1507142763
 Transform:
   m_ObjectHideFlags: 0
@@ -4644,3 +4717,4 @@ SceneRoots:
   - {fileID: 39346331}
   - {fileID: 1436099092}
   - {fileID: 1062998846}
+  - {fileID: 846354832}

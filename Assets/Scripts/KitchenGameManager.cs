@@ -25,6 +25,7 @@ public class KitchenGameManager : NetworkBehaviour
     [Networked] public float GamePlayingTimer { get; set; }
     [Networked] private NetworkBool IsInitialized { get; set; }
     [Networked] private float ReturnToLobbyTimer { get; set; }
+    [Networked] public int VersusWinningTeamIndex { get; set; } = -1;
 
     private float gamePlayingTimerMax = 30f;
     private float returnToLobbyDelay = 5f;
@@ -81,6 +82,16 @@ public class KitchenGameManager : NetworkBehaviour
             case State.GamePlaying:
                 GamePlayingTimer -= Runner.DeltaTime;
                 if(GamePlayingTimer < 0){
+                    if(LobbyManager.GetCachedMatchMode() == LobbyManager.MatchModeVersus && VersusMatchManager.IsReady){
+                        int heartsA = VersusMatchManager.Instance.GetTeamHearts(0);
+                        int heartsB = VersusMatchManager.Instance.GetTeamHearts(1);
+                        int winner = heartsA == heartsB ? -1 : (heartsA > heartsB ? 0 : 1);
+                        if(winner != -1){
+                            VersusMatchManager.Instance.ForceWin(winner);
+                            break;
+                        }
+                        VersusWinningTeamIndex = -1;
+                    }
                     NetworkedState = (int)State.GameOver;
                     ReturnToLobbyTimer = returnToLobbyDelay;
                 }
@@ -98,6 +109,14 @@ public class KitchenGameManager : NetworkBehaviour
         if(HasStateAuthority && (State)NetworkedState == State.WaitingToStart){
             NetworkedState = (int)State.CountdownToStart;
         }
+    }
+
+    public void ForceGameOver(int winningTeamIndex){
+        if(!HasStateAuthority) return;
+        if((State)NetworkedState == State.GameOver) return;
+        VersusWinningTeamIndex = winningTeamIndex;
+        NetworkedState = (int)State.GameOver;
+        ReturnToLobbyTimer = returnToLobbyDelay;
     }
 
     public bool IsGamePlaying(){

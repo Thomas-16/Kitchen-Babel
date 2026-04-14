@@ -108,6 +108,10 @@ public class LobbyManager : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
+        // Populate static caches on every peer (not just the host) so game-scene code can
+        // look up per-player team/color/name and match mode from any client.
+        SnapshotPlayerColors();
+
         if (Instance == this)
             Instance = null;
     }

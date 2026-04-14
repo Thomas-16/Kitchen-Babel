@@ -1,25 +1,43 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cinemachine;
 using Fusion;
 using UnityEngine;
 
 public class MapManager : NetworkBehaviour
 {
+    public const float VERSUS_KITCHEN_OFFSET_X = 1000f;
+
     public static MapManager Instance { get; private set; }
     public static event Action OnMapLoaded;
 
     [SerializeField] private MapListSO mapList;
+    [SerializeField] private CinemachineVirtualCamera virtualCamera;
 
     [Networked] public int MapIndex { get; set; } = -1;
     [Networked] public int RandomSeed { get; set; }
     [Networked] public NetworkBool MapReady { get; set; }
+    [Networked] public NetworkBool IsVersus { get; set; }
 
     private ChangeDetector changeDetector;
     private bool hasLoadedMap;
     private bool hasFinishedSetup;
+
+    // Co-op
     private GameObject instantiatedMap;
     private List<Transform> cachedSpawnPositions;
+
+    // Versus
+    private GameObject instantiatedMapTeamA;
+    private GameObject instantiatedMapTeamB;
+    private List<Transform> cachedSpawnPositionsTeamA;
+    private List<Transform> cachedSpawnPositionsTeamB;
+
+    public static Vector3 GetTeamOffset(int teamIndex)
+    {
+        return teamIndex == 1 ? new Vector3(VERSUS_KITCHEN_OFFSET_X, 0f, 0f) : Vector3.zero;
+    }
 
     public override void Spawned()
     {
@@ -38,6 +56,7 @@ public class MapManager : NetworkBehaviour
                     ? chosen
                     : UnityEngine.Random.Range(0, mapList.maps.Count);
                 RandomSeed = UnityEngine.Random.Range(1, int.MaxValue);
+                IsVersus = LobbyManager.GetCachedMatchMode() == LobbyManager.MatchModeVersus;
             }
         }
 
@@ -69,27 +88,22 @@ public class MapManager : NetworkBehaviour
         hasLoadedMap = true;
         MapConfigSO config = mapList.maps[MapIndex];
 
-        // Instantiate the map prefab (walls, floor, decorations, placeholders)
-        instantiatedMap = Instantiate(config.mapPrefab);
-
-        // Apply camera settings
-        Camera mainCamera = Camera.main;
-        if (mainCamera != null)
+        if (IsVersus)
         {
-            mainCamera.transform.position = config.cameraPosition;
-            mainCamera.transform.eulerAngles = config.cameraRotation;
-            mainCamera.fieldOfView = config.cameraFOV;
+            instantiatedMapTeamA = InstantiateKitchen(config, 0);
+            instantiatedMapTeamB = InstantiateKitchen(config, 1);
+            cachedSpawnPositionsTeamA = CollectSpawnPositions(instantiatedMapTeamA);
+            cachedSpawnPositionsTeamB = CollectSpawnPositions(instantiatedMapTeamB);
+
+            int localTeam = LobbyManager.GetCachedPlayerTeamIndex(Runner.LocalPlayer);
+            if (localTeam != 0 && localTeam != 1) localTeam = 0;
+            PositionVirtualCamera(config, GetTeamOffset(localTeam));
         }
-
-        // Cache spawn positions from the map prefab
-        Transform spawnPositionsParent = instantiatedMap.transform.Find("PlayerSpawnPositions");
-        if (spawnPositionsParent != null)
+        else
         {
-            cachedSpawnPositions = new List<Transform>();
-            foreach (Transform child in spawnPositionsParent)
-            {
-                cachedSpawnPositions.Add(child);
-            }
+            instantiatedMap = InstantiateKitchen(config, 0);
+            cachedSpawnPositions = CollectSpawnPositions(instantiatedMap);
+            PositionVirtualCamera(config, Vector3.zero);
         }
 
         // If KitchenGameMultiplayer is already ready, finish setup now
@@ -106,6 +120,35 @@ public class MapManager : NetworkBehaviour
         OnMapLoaded?.Invoke();
     }
 
+    private GameObject InstantiateKitchen(MapConfigSO config, int teamIndex)
+    {
+        Vector3 offset = GetTeamOffset(teamIndex);
+        GameObject instance = Instantiate(config.mapPrefab, offset, Quaternion.identity);
+        return instance;
+    }
+
+    private static List<Transform> CollectSpawnPositions(GameObject mapInstance)
+    {
+        List<Transform> list = new List<Transform>();
+        Transform spawnPositionsParent = mapInstance.transform.Find("PlayerSpawnPositions");
+        if (spawnPositionsParent != null)
+        {
+            foreach (Transform child in spawnPositionsParent)
+            {
+                list.Add(child);
+            }
+        }
+        return list;
+    }
+
+    private void PositionVirtualCamera(MapConfigSO config, Vector3 kitchenOffset)
+    {
+        if (virtualCamera == null) return;
+        virtualCamera.transform.position = config.cameraPosition + kitchenOffset;
+        virtualCamera.transform.eulerAngles = config.cameraRotation;
+        virtualCamera.m_Lens.FieldOfView = config.cameraFOV;
+    }
+
     private void OnKitchenGameMultiplayerReady()
     {
         KitchenGameMultiplayer.OnInstanceReady -= OnKitchenGameMultiplayerReady;
@@ -116,21 +159,46 @@ public class MapManager : NetworkBehaviour
     {
         if (hasFinishedSetup) return;
         hasFinishedSetup = true;
-        Debug.Log($"[MapManager] FinishSetup — HasStateAuthority={HasStateAuthority}, MapReady={MapReady}");
+        Debug.Log($"[MapManager] FinishSetup — HasStateAuthority={HasStateAuthority}, MapReady={MapReady}, IsVersus={IsVersus}");
 
-        if (cachedSpawnPositions != null)
+        if (IsVersus)
         {
-            KitchenGameMultiplayer.Instance.SetSpawnPositions(cachedSpawnPositions);
+            if (cachedSpawnPositionsTeamA != null && cachedSpawnPositionsTeamB != null)
+            {
+                KitchenGameMultiplayer.Instance.SetSpawnPositionsVersus(cachedSpawnPositionsTeamA, cachedSpawnPositionsTeamB);
+            }
+        }
+        else
+        {
+            if (cachedSpawnPositions != null)
+            {
+                KitchenGameMultiplayer.Instance.SetSpawnPositions(cachedSpawnPositions);
+            }
         }
 
         // Host spawns counters and triggers game start
         // MapReady check: during host migration, counters are restored from snapshot — skip re-spawning
         if (HasStateAuthority && !MapReady)
         {
-            SpawnCounters();
+            if (IsVersus)
+            {
+                SpawnCountersForTeam(instantiatedMapTeamA, 0);
+                SpawnCountersForTeam(instantiatedMapTeamB, 1);
+            }
+            else
+            {
+                SpawnCountersForTeam(instantiatedMap, -1);
+            }
             MapReady = true;
 
-            KitchenGameMultiplayer.Instance.SpawnAllPlayers();
+            if (IsVersus)
+            {
+                KitchenGameMultiplayer.Instance.SpawnAllPlayersVersus();
+            }
+            else
+            {
+                KitchenGameMultiplayer.Instance.SpawnAllPlayers();
+            }
 
             // Start the game once KitchenGameManager is ready
             if (KitchenGameManager.Instance != null)
@@ -158,23 +226,24 @@ public class MapManager : NetworkBehaviour
         KitchenGameManager.Instance.TryStartGame();
     }
 
-    private void SpawnCounters()
+    private void SpawnCountersForTeam(GameObject mapInstance, int teamIndex)
     {
-        CounterPlaceholder[] placeholders = instantiatedMap.GetComponentsInChildren<CounterPlaceholder>()
+        if (mapInstance == null) return;
+
+        CounterPlaceholder[] placeholders = mapInstance.GetComponentsInChildren<CounterPlaceholder>()
             .OrderBy(p => p.gameObject.name, StringComparer.Ordinal)
             .ToArray();
 
         if (placeholders.Length == 0) return;
 
+        // Seeded RNG — running this pipeline twice (once per team) with the same seed produces
+        // identical layouts, satisfying the "both kitchens must be identical" versus constraint.
         System.Random rng = new System.Random(RandomSeed);
 
-        // Resolve flex choices first (uses RNG)
         NetworkPrefabRef[] resolvedPrefabs = MapRandomizer.ResolveFlexChoices(placeholders, rng);
-
-        // Shuffle shuffleable placeholder positions (uses same RNG sequence)
         MapRandomizer.ShufflePlaceholderPositions(placeholders, rng);
 
-        // Spawn all counters at their final positions
+        int capturedTeamIndex = teamIndex;
         for (int i = 0; i < placeholders.Length; i++)
         {
             Vector3 pos = placeholders[i].transform.position;
@@ -191,12 +260,12 @@ public class MapManager : NetworkBehaviour
                     {
                         counter.SpawnPosition = pos;
                         counter.SpawnRotation = rot;
+                        counter.TeamIndex = capturedTeamIndex;
                     }
                 }
             );
         }
 
-        // Clean up placeholder objects
         foreach (CounterPlaceholder placeholder in placeholders)
         {
             Destroy(placeholder.gameObject);

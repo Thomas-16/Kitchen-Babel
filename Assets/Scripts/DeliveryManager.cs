@@ -61,6 +61,7 @@ public class DeliveryManager : NetworkBehaviour
     public override void FixedUpdateNetwork(){
         if(!HasStateAuthority) return;
         if(!KitchenGameManager.IsReady) return;
+        if(LobbyManager.GetCachedMatchMode() == LobbyManager.MatchModeVersus) return;
 
         if(KitchenGameManager.Instance.IsGamePlaying()){
             spawnRecipeTimer -= Runner.DeltaTime;

@@ -82,7 +82,10 @@ public class SoundManager : MonoBehaviour
         PlaySound(audioClipRefsSO.dash, position);
     }
     public void PlayCountDownSound(){
-        PlaySound(audioClipRefsSO.warning, Vector3.zero);
+        // Play at the local player's position so the countdown is audible in the local kitchen
+        // (in Versus mode the two kitchens are far apart; Vector3.zero would be silent for one team).
+        Vector3 origin = Player.LocalInstance != null ? Player.LocalInstance.transform.position : Vector3.zero;
+        PlaySound(audioClipRefsSO.warning, origin);
     }
     public void PlayWarningSound(Vector3 position){
         PlaySound(audioClipRefsSO.warning, position);

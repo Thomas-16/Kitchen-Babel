@@ -6,7 +6,11 @@ public class DeliveryCounter : BaseCounter
     {
         if(player.HasKitchenObject()){
             if(player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject)){
-                DeliveryManager.Instance.DeliverRecipe(this, plateKitchenObject);
+                if(TeamIndex == -1){
+                    DeliveryManager.Instance.DeliverRecipe(this, plateKitchenObject);
+                }else if(VersusMatchManager.IsReady){
+                    VersusMatchManager.Instance.DeliverRecipe(TeamIndex, plateKitchenObject);
+                }
 
                 player.GetKitchenObject().DestroySelf();
             }

@@ -14,6 +14,8 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
     [SerializeField] private KitchenObjectListSO kitchenObjectListSO;
 
     private List<Transform> spawnPositions = new List<Transform>();
+    private List<Transform> spawnPositionsTeamA = new List<Transform>();
+    private List<Transform> spawnPositionsTeamB = new List<Transform>();
 
     private static bool isHostMigrationResume;
 
@@ -47,6 +49,12 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
         spawnPositions = positions;
     }
 
+    public void SetSpawnPositionsVersus(List<Transform> teamA, List<Transform> teamB)
+    {
+        spawnPositionsTeamA = teamA;
+        spawnPositionsTeamB = teamB;
+    }
+
     public void SpawnAllPlayers()
     {
         if (!Runner.IsServer) return;
@@ -71,6 +79,67 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
                 }
             );
         }
+    }
+
+    public void SpawnAllPlayersVersus()
+    {
+        if (!Runner.IsServer) return;
+        if (spawnPositionsTeamA.Count == 0 || spawnPositionsTeamB.Count == 0)
+        {
+            Debug.LogWarning("[KGM] SpawnAllPlayersVersus called but per-team spawn positions are not set!");
+            return;
+        }
+
+        foreach (PlayerRef player in Runner.ActivePlayers)
+        {
+            SpawnVersusPlayer(player);
+        }
+    }
+
+    private void SpawnVersusPlayer(PlayerRef player)
+    {
+        int teamIndex = LobbyManager.GetCachedPlayerTeamIndex(player);
+        if (teamIndex != 0 && teamIndex != 1)
+        {
+            Debug.LogWarning($"[KGM] Versus spawn for {player} has unresolved team ({teamIndex}); defaulting to Team A.");
+            teamIndex = 0;
+        }
+
+        List<Transform> teamSpawns = teamIndex == 1 ? spawnPositionsTeamB : spawnPositionsTeamA;
+        if (teamSpawns.Count == 0) return;
+
+        int spawnIndex = GetVersusTeamSlotIndex(player, teamIndex, teamSpawns.Count);
+        Transform spawnPoint = teamSpawns[spawnIndex];
+        Debug.Log($"[KGM] Versus spawning {player} on team {teamIndex} at index {spawnIndex}, pos={spawnPoint.position}");
+
+        PlayerRef capturedPlayer = player;
+        int capturedTeamIndex = teamIndex;
+        Runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player,
+            (runner, obj) =>
+            {
+                Player p = obj.GetComponent<Player>();
+                p.ColorIndex = LobbyManager.GetCachedPlayerColorIndex(capturedPlayer);
+                p.PlayerName = LobbyManager.GetCachedPlayerName(capturedPlayer);
+                p.TeamIndex = capturedTeamIndex;
+            }
+        );
+    }
+
+    // Count same-team players with a lower PlayerRef index so each team member gets a unique
+    // spawn slot within their own kitchen. `player.AsIndex` alone is the global lobby index
+    // and collides (e.g. Team A holding refs 0 and 2 both resolve to slot 0 with 2 spawns).
+    private int GetVersusTeamSlotIndex(PlayerRef player, int teamIndex, int slotCount)
+    {
+        if (slotCount <= 0) return 0;
+        int position = 0;
+        foreach (PlayerRef other in Runner.ActivePlayers)
+        {
+            if (other == player) continue;
+            if (other.AsIndex >= player.AsIndex) continue;
+            if (LobbyManager.GetCachedPlayerTeamIndex(other) != teamIndex) continue;
+            position++;
+        }
+        return position % slotCount;
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState){
@@ -104,37 +173,49 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
     // INetworkRunnerCallbacks
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player){
         Debug.Log($"[KGM] OnPlayerJoined: {player}, IsServer={runner.IsServer}");
-        if(runner.IsServer){
-            if (spawnPositions.Count == 0)
+        if(!runner.IsServer) return;
+
+        // After host migration Fusion re-fires OnPlayerJoined for every connected player,
+        // but their Player NetworkObject was already restored by HostMigrationResume.
+        // Skip the spawn if a Player already exists for this PlayerRef.
+        foreach (NetworkObject existing in runner.GetAllNetworkObjects())
+        {
+            if (existing.InputAuthority == player && existing.GetComponent<Player>() != null)
             {
-                Debug.LogWarning("[KGM] OnPlayerJoined but no spawn positions set yet — skipping spawn.");
+                Debug.Log($"[KGM] Player already exists for {player} — skipping spawn.");
                 return;
             }
-
-            // After host migration Fusion re-fires OnPlayerJoined for every connected player,
-            // but their Player NetworkObject was already restored by HostMigrationResume.
-            // Skip the spawn if a Player already exists for this PlayerRef.
-            foreach (NetworkObject existing in runner.GetAllNetworkObjects())
-            {
-                if (existing.InputAuthority == player && existing.GetComponent<Player>() != null)
-                {
-                    Debug.Log($"[KGM] Player already exists for {player} — skipping spawn.");
-                    return;
-                }
-            }
-
-            int spawnIndex = player.AsIndex % spawnPositions.Count;
-            Transform spawnPoint = spawnPositions[spawnIndex];
-
-            NetworkObject playerNetworkObject = runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player,
-                (runner, obj) =>
-                {
-                    Player p = obj.GetComponent<Player>();
-                    p.ColorIndex = LobbyManager.GetCachedPlayerColorIndex(player);
-                    p.PlayerName = LobbyManager.GetCachedPlayerName(player);
-                }
-            );
         }
+
+        bool isVersus = LobbyManager.GetCachedMatchMode() == LobbyManager.MatchModeVersus;
+        if (isVersus)
+        {
+            if (spawnPositionsTeamA.Count == 0 || spawnPositionsTeamB.Count == 0)
+            {
+                Debug.LogWarning("[KGM] OnPlayerJoined (versus) but per-team spawn positions are not set yet — skipping spawn.");
+                return;
+            }
+            SpawnVersusPlayer(player);
+            return;
+        }
+
+        if (spawnPositions.Count == 0)
+        {
+            Debug.LogWarning("[KGM] OnPlayerJoined but no spawn positions set yet — skipping spawn.");
+            return;
+        }
+
+        int spawnIndex = player.AsIndex % spawnPositions.Count;
+        Transform spawnPoint = spawnPositions[spawnIndex];
+
+        NetworkObject playerNetworkObject = runner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, player,
+            (runner, obj) =>
+            {
+                Player p = obj.GetComponent<Player>();
+                p.ColorIndex = LobbyManager.GetCachedPlayerColorIndex(player);
+                p.PlayerName = LobbyManager.GetCachedPlayerName(player);
+            }
+        );
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player){
