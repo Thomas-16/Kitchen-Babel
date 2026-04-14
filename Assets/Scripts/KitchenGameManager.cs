@@ -80,18 +80,12 @@ public class KitchenGameManager : NetworkBehaviour
                 }
                 break;
             case State.GamePlaying:
+                if(LobbyManager.GetCachedMatchMode() == LobbyManager.MatchModeVersus){
+                    // Versus has no time limit — match ends only when a team loses all hearts.
+                    break;
+                }
                 GamePlayingTimer -= Runner.DeltaTime;
                 if(GamePlayingTimer < 0){
-                    if(LobbyManager.GetCachedMatchMode() == LobbyManager.MatchModeVersus && VersusMatchManager.IsReady){
-                        int heartsA = VersusMatchManager.Instance.GetTeamHearts(0);
-                        int heartsB = VersusMatchManager.Instance.GetTeamHearts(1);
-                        int winner = heartsA == heartsB ? -1 : (heartsA > heartsB ? 0 : 1);
-                        if(winner != -1){
-                            VersusMatchManager.Instance.ForceWin(winner);
-                            break;
-                        }
-                        VersusWinningTeamIndex = -1;
-                    }
                     NetworkedState = (int)State.GameOver;
                     ReturnToLobbyTimer = returnToLobbyDelay;
                 }
