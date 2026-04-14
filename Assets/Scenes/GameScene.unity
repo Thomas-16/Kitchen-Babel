@@ -2954,9 +2954,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VersusMatchManager
   recipeListSO: {fileID: 11400000, guid: 28a55dd3f3da1914086acfcb72e26e80, type: 2}
+  heartLossMoneyBonus: 20
+  heartLossOrderPauseSeconds: 8
+  heartLossSabotageShieldSeconds: 8
   _TeamHearts: 
   _TeamMoney: 
   _TeamSuccessfulRecipes: 
+  _TeamOrdersVersion: 
+  _TeamOrderPauseUntilTick: 
+  _TeamSabotageShieldUntilTick: 
   _WinningTeamIndex: -1
 --- !u!4 &846354832
 Transform:

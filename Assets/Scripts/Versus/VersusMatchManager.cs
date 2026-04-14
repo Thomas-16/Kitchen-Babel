@@ -49,10 +49,17 @@ public class VersusMatchManager : NetworkBehaviour
 
     [SerializeField] private RecipeListSO recipeListSO;
 
+    [Header("Anti-Snowball Tuning")]
+    [SerializeField] private int heartLossMoneyBonus = 30;
+    [SerializeField] private float heartLossOrderPauseSeconds = 8f;
+    [SerializeField] private float heartLossSabotageShieldSeconds = 8f;
+
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamHearts => default;
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamMoney => default;
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamSuccessfulRecipes => default;
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamOrdersVersion => default;
+    [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamOrderPauseUntilTick => default;
+    [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamSabotageShieldUntilTick => default;
     [Networked] public int WinningTeamIndex { get; set; } = -1;
     [Networked] private NetworkBool IsInitialized { get; set; }
     [Networked] private int NextOrderSpawnTick { get; set; }
@@ -175,8 +182,10 @@ public class VersusMatchManager : NetworkBehaviour
             IsSabotage = false,
         };
 
+        int nowTick = Runner.Tick;
         for (int team = 0; team < TeamCount; team++)
         {
+            if (nowTick < TeamOrderPauseUntilTick[team]) continue;
             var queue = GetTeamOrders(team);
             if (queue.Count < OrderCapacity)
             {
@@ -184,6 +193,35 @@ public class VersusMatchManager : NetworkBehaviour
                 BumpOrdersVersion(team);
             }
         }
+    }
+
+    public bool IsSabotageShielded(int teamIndex)
+    {
+        if (teamIndex < 0 || teamIndex >= TeamCount) return false;
+        return Runner.Tick < TeamSabotageShieldUntilTick[teamIndex];
+    }
+
+    public bool TryAddSabotageOrder(int targetTeamIndex, int recipeIndex)
+    {
+        if (!HasStateAuthority) return false;
+        if (targetTeamIndex < 0 || targetTeamIndex >= TeamCount) return false;
+        if (WinningTeamIndex != -1) return false;
+        if (recipeListSO == null) return false;
+        if (recipeIndex < 0 || recipeIndex >= recipeListSO.recipeSOList.Count) return false;
+        if (IsSabotageShielded(targetTeamIndex)) return false;
+
+        var queue = GetTeamOrders(targetTeamIndex);
+        if (queue.Count >= OrderCapacity) return false;
+
+        int expirationTick = Runner.Tick + Mathf.RoundToInt(OrderExpiryDurationSeconds / Runner.DeltaTime);
+        queue.Add(new OrderData
+        {
+            RecipeIndex = recipeIndex,
+            ExpirationTick = expirationTick,
+            IsSabotage = true,
+        });
+        BumpOrdersVersion(targetTeamIndex);
+        return true;
     }
 
     private void BumpOrdersVersion(int teamIndex)
@@ -228,13 +266,39 @@ public class VersusMatchManager : NetworkBehaviour
 
         int current = TeamHearts[teamIndex];
         if (current <= 0) return;
-        TeamHearts.Set(teamIndex, current - 1);
+        int remaining = current - 1;
+        TeamHearts.Set(teamIndex, remaining);
 
         RPC_OnTeamLostHeart(teamIndex);
 
-        if (current - 1 <= 0)
+        if (remaining <= 0)
         {
             SetWinner(1 - teamIndex);
+            return;
+        }
+
+        ApplyAntiSnowballBuffers(teamIndex);
+    }
+
+    private void ApplyAntiSnowballBuffers(int teamIndex)
+    {
+        if (heartLossMoneyBonus > 0) AddMoney(teamIndex, heartLossMoneyBonus);
+
+        int nowTick = Runner.Tick;
+        int tickRate = Runner.TickRate;
+
+        if (heartLossOrderPauseSeconds > 0f)
+        {
+            int pauseUntil = nowTick + Mathf.CeilToInt(heartLossOrderPauseSeconds * tickRate);
+            if (pauseUntil > TeamOrderPauseUntilTick[teamIndex])
+                TeamOrderPauseUntilTick.Set(teamIndex, pauseUntil);
+        }
+
+        if (heartLossSabotageShieldSeconds > 0f)
+        {
+            int shieldUntil = nowTick + Mathf.CeilToInt(heartLossSabotageShieldSeconds * tickRate);
+            if (shieldUntil > TeamSabotageShieldUntilTick[teamIndex])
+                TeamSabotageShieldUntilTick.Set(teamIndex, shieldUntil);
         }
     }
 
