@@ -10,8 +10,9 @@ public class VersusMatchManager : NetworkBehaviour
     public const int StartingMoney = 0;
 
     public const int OrderCapacity = 6;
+    public const int InitialNaturalOrders = 2;
     public const float NaturalOrderIntervalSeconds = 15f;
-    public const float OrderExpiryDurationSeconds = 60f;
+    public const float OrderExpiryDurationSeconds = 50f;
     public const int WrongDeliveryMoneyPenalty = 50;
 
     public static VersusMatchManager Instance { get; private set; }
@@ -143,6 +144,10 @@ public class VersusMatchManager : NetworkBehaviour
 
         if (NextOrderSpawnTick == 0)
         {
+            for (int i = 0; i < InitialNaturalOrders; i++)
+            {
+                SpawnNaturalOrderForBothTeams();
+            }
             NextOrderSpawnTick = Runner.Tick + intervalTicks;
         }
 
