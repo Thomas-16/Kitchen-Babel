@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using System;
 
-public class GameOverUI : MonoBehaviour
+public class CoopGameOverUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI recipesDeliveredText;
 
@@ -17,6 +17,10 @@ public class GameOverUI : MonoBehaviour
         KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
     }
     private void KitchenGameManager_OnStateChanged(object sender, EventArgs e){
+        if(MapManager.Instance != null && MapManager.Instance.IsVersus){
+            Hide();
+            return;
+        }
         if(KitchenGameManager.Instance.IsGameOver()){
             Show();
             recipesDeliveredText.text = DeliveryManager.Instance.GetSuccessfulRecipesAmount().ToString();

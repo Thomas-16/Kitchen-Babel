@@ -1,5 +1,6 @@
 using Fusion;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class VersusMatchManager : NetworkBehaviour
@@ -7,6 +8,11 @@ public class VersusMatchManager : NetworkBehaviour
     public const int TeamCount = 2;
     public const int StartingHearts = 3;
     public const int StartingMoney = 0;
+
+    public const int OrderCapacity = 6;
+    public const float NaturalOrderIntervalSeconds = 15f;
+    public const float OrderExpiryDurationSeconds = 60f;
+    public const int WrongDeliveryMoneyPenalty = 50;
 
     public static VersusMatchManager Instance { get; private set; }
     public static event EventHandler OnInstanceReady;
@@ -18,6 +24,8 @@ public class VersusMatchManager : NetworkBehaviour
     public event EventHandler OnTeamMoneyChanged;
     public event EventHandler OnGameWon;
     public event EventHandler<TeamEventArgs> OnTeamLostHeart;
+    public event EventHandler<TeamEventArgs> OnTeamOrdersChanged;
+    public event EventHandler<TeamEventArgs> OnTeamSuccessfulRecipesChanged;
     public event EventHandler<DeliveryAttemptEventArgs> OnDeliveryAttempted;
 
     public class TeamEventArgs : EventArgs
@@ -31,16 +39,28 @@ public class VersusMatchManager : NetworkBehaviour
         public bool Success;
     }
 
+    public struct OrderData : INetworkStruct
+    {
+        public int RecipeIndex;
+        public int ExpirationTick;
+        public NetworkBool IsSabotage;
+    }
+
+    [SerializeField] private RecipeListSO recipeListSO;
+
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamHearts => default;
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamMoney => default;
+    [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamSuccessfulRecipes => default;
+    [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamOrdersVersion => default;
     [Networked] public int WinningTeamIndex { get; set; } = -1;
     [Networked] private NetworkBool IsInitialized { get; set; }
+    [Networked] private int NextOrderSpawnTick { get; set; }
 
-    // Per-team order queues — scaffolded for section #4 to populate.
-    [Networked, Capacity(8)] public NetworkLinkedList<int> TeamAOrders => default;
-    [Networked, Capacity(8)] public NetworkLinkedList<int> TeamBOrders => default;
+    [Networked, Capacity(OrderCapacity)] public NetworkLinkedList<OrderData> TeamAOrders => default;
+    [Networked, Capacity(OrderCapacity)] public NetworkLinkedList<OrderData> TeamBOrders => default;
 
     private ChangeDetector changeDetector;
+    private readonly int[] lastKnownOrdersVersion = new int[TeamCount];
 
     public static void ResetStaticData()
     {
@@ -58,9 +78,16 @@ public class VersusMatchManager : NetworkBehaviour
             {
                 TeamHearts.Set(i, StartingHearts);
                 TeamMoney.Set(i, StartingMoney);
+                TeamSuccessfulRecipes.Set(i, 0);
             }
             WinningTeamIndex = -1;
+            NextOrderSpawnTick = 0;
             IsInitialized = true;
+        }
+
+        for (int i = 0; i < TeamCount; i++)
+        {
+            lastKnownOrdersVersion[i] = TeamOrdersVersion[i];
         }
 
         OnInstanceReady?.Invoke(this, EventArgs.Empty);
@@ -84,11 +111,105 @@ public class VersusMatchManager : NetworkBehaviour
                 case nameof(TeamMoney):
                     OnTeamMoneyChanged?.Invoke(this, EventArgs.Empty);
                     break;
+                case nameof(TeamSuccessfulRecipes):
+                    OnTeamSuccessfulRecipesChanged?.Invoke(this, new TeamEventArgs { TeamIndex = -1 });
+                    break;
                 case nameof(WinningTeamIndex):
                     if (WinningTeamIndex != -1)
                         OnGameWon?.Invoke(this, EventArgs.Empty);
                     break;
             }
+        }
+
+        for (int i = 0; i < TeamCount; i++)
+        {
+            int version = TeamOrdersVersion[i];
+            if (version != lastKnownOrdersVersion[i])
+            {
+                lastKnownOrdersVersion[i] = version;
+                OnTeamOrdersChanged?.Invoke(this, new TeamEventArgs { TeamIndex = i });
+            }
+        }
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!HasStateAuthority) return;
+        if (!KitchenGameManager.IsReady) return;
+        if (!KitchenGameManager.Instance.IsGamePlaying()) return;
+        if (WinningTeamIndex != -1) return;
+
+        int intervalTicks = Mathf.Max(1, Mathf.RoundToInt(NaturalOrderIntervalSeconds / Runner.DeltaTime));
+
+        if (NextOrderSpawnTick == 0)
+        {
+            NextOrderSpawnTick = Runner.Tick + intervalTicks;
+        }
+
+        if (Runner.Tick >= NextOrderSpawnTick)
+        {
+            SpawnNaturalOrderForBothTeams();
+            NextOrderSpawnTick = Runner.Tick + intervalTicks;
+        }
+
+        SweepExpiredOrders(0);
+        SweepExpiredOrders(1);
+    }
+
+    private void SpawnNaturalOrderForBothTeams()
+    {
+        if (recipeListSO == null || recipeListSO.recipeSOList.Count == 0) return;
+
+        int recipeIndex = UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count);
+        int expirationTick = Runner.Tick + Mathf.RoundToInt(OrderExpiryDurationSeconds / Runner.DeltaTime);
+
+        OrderData order = new OrderData
+        {
+            RecipeIndex = recipeIndex,
+            ExpirationTick = expirationTick,
+            IsSabotage = false,
+        };
+
+        for (int team = 0; team < TeamCount; team++)
+        {
+            var queue = GetTeamOrders(team);
+            if (queue.Count < OrderCapacity)
+            {
+                queue.Add(order);
+                BumpOrdersVersion(team);
+            }
+        }
+    }
+
+    private void BumpOrdersVersion(int teamIndex)
+    {
+        TeamOrdersVersion.Set(teamIndex, TeamOrdersVersion[teamIndex] + 1);
+    }
+
+    private void SweepExpiredOrders(int teamIndex)
+    {
+        if (WinningTeamIndex != -1) return;
+        var queue = GetTeamOrders(teamIndex);
+        if (queue.Count == 0) return;
+
+        List<OrderData> expired = null;
+        for (int i = 0; i < queue.Count; i++)
+        {
+            if (queue[i].ExpirationTick <= Runner.Tick)
+            {
+                (expired ??= new List<OrderData>()).Add(queue[i]);
+            }
+        }
+        if (expired == null) return;
+
+        foreach (OrderData order in expired)
+        {
+            queue.Remove(order);
+            BumpOrdersVersion(teamIndex);
+            int penalty = ComputeRecipeReward(order.RecipeIndex) / 2;
+            if (penalty > 0) DeductMoney(teamIndex, penalty);
+            DeductHeart(teamIndex);
+            if (WinningTeamIndex != -1) return;
         }
     }
 
@@ -120,6 +241,16 @@ public class VersusMatchManager : NetworkBehaviour
         TeamMoney.Set(teamIndex, TeamMoney[teamIndex] + amount);
     }
 
+    public void DeductMoney(int teamIndex, int amount)
+    {
+        if (!HasStateAuthority) return;
+        if (teamIndex < 0 || teamIndex >= TeamCount) return;
+        if (amount <= 0) return;
+        int current = TeamMoney[teamIndex];
+        int next = Mathf.Max(0, current - amount);
+        TeamMoney.Set(teamIndex, next);
+    }
+
     public bool TrySpendMoney(int teamIndex, int amount)
     {
         if (!HasStateAuthority) return false;
@@ -131,13 +262,51 @@ public class VersusMatchManager : NetworkBehaviour
         return true;
     }
 
-    // Stub: section #5 will implement real per-team delivery scoring.
-    // Kept here so DeliveryCounter can route versus deliveries through a single entry point today.
     public void DeliverRecipe(int teamIndex, PlateKitchenObject plateKitchenObject)
     {
         if (!HasStateAuthority) return;
-        // TODO(section #5): match against the team's order queue, pay out on success,
-        // deduct heart/money on failure, fire success/fail RPC for HUD/SFX.
+        if (teamIndex < 0 || teamIndex >= TeamCount)
+        {
+            RPC_OnDeliveryAttempted(teamIndex, false);
+            return;
+        }
+        if (WinningTeamIndex != -1) return;
+
+        var queue = GetTeamOrders(teamIndex);
+        List<KitchenObjectSO> plateContents = plateKitchenObject.GetKitchenObjectSOList();
+
+        for (int i = 0; i < queue.Count; i++)
+        {
+            OrderData order = queue[i];
+            RecipeSO recipeSO = recipeListSO.recipeSOList[order.RecipeIndex];
+
+            if (recipeSO.kitchenObjectSOList.Count != plateContents.Count) continue;
+
+            bool allMatched = true;
+            foreach (KitchenObjectSO recipeSOIngredient in recipeSO.kitchenObjectSOList)
+            {
+                bool found = false;
+                foreach (KitchenObjectSO plateIngredient in plateContents)
+                {
+                    if (plateIngredient == recipeSOIngredient) { found = true; break; }
+                }
+                if (!found) { allMatched = false; break; }
+            }
+
+            if (!allMatched) continue;
+
+            queue.Remove(order);
+            BumpOrdersVersion(teamIndex);
+            int reward = ComputeRecipeReward(order.RecipeIndex);
+            if (reward > 0) AddMoney(teamIndex, reward);
+            TeamSuccessfulRecipes.Set(teamIndex, TeamSuccessfulRecipes[teamIndex] + 1);
+            RPC_OnDeliveryAttempted(teamIndex, true);
+            return;
+        }
+
+        // No match — wrong delivery.
+        DeductMoney(teamIndex, WrongDeliveryMoneyPenalty);
+        DeductHeart(teamIndex);
         RPC_OnDeliveryAttempted(teamIndex, false);
     }
 
@@ -172,7 +341,37 @@ public class VersusMatchManager : NetworkBehaviour
         return TeamMoney[teamIndex];
     }
 
+    public int GetTeamSuccessfulRecipes(int teamIndex)
+    {
+        if (teamIndex < 0 || teamIndex >= TeamCount) return 0;
+        return TeamSuccessfulRecipes[teamIndex];
+    }
+
     public int GetWinningTeamIndex() => WinningTeamIndex;
+
+    public NetworkLinkedList<OrderData> GetTeamOrders(int teamIndex)
+    {
+        return teamIndex == 0 ? TeamAOrders : TeamBOrders;
+    }
+
+    public RecipeSO GetRecipeSO(int recipeIndex)
+    {
+        if (recipeListSO == null) return null;
+        if (recipeIndex < 0 || recipeIndex >= recipeListSO.recipeSOList.Count) return null;
+        return recipeListSO.recipeSOList[recipeIndex];
+    }
+
+    public int ComputeRecipeReward(int recipeIndex)
+    {
+        RecipeSO recipeSO = GetRecipeSO(recipeIndex);
+        if (recipeSO == null) return 0;
+        int sum = 0;
+        foreach (KitchenObjectSO ingredient in recipeSO.kitchenObjectSOList)
+        {
+            sum += ingredient.moneyValue;
+        }
+        return sum;
+    }
 
     // --- RPCs for client feedback hooks ---
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 
-public class DeliveryManagerUI : MonoBehaviour
+public class CoopDeliveryManagerUI : MonoBehaviour
 {
     [SerializeField] private Transform container;
     [SerializeField] private Transform recipeTemplate;
