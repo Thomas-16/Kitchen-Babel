@@ -7,17 +7,25 @@ public class MoneyUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI moneyText;
 
     private bool subscribed;
+    private bool modeResolved;
     private int lastKnownLocalTeam = -1;
 
     private void Start() {
-        if (MapManager.Instance != null && !MapManager.Instance.IsVersus) {
-            gameObject.SetActive(false);
-            return;
-        }
+        TryResolveMode();
+        if (!gameObject.activeSelf) return;
 
         VersusMatchManager.OnInstanceReady += VersusMatchManager_OnInstanceReady;
         if (VersusMatchManager.Instance != null) {
             SubscribeToManager();
+        }
+    }
+
+    private void TryResolveMode() {
+        if (modeResolved) return;
+        if (MapManager.Instance == null) return;
+        modeResolved = true;
+        if (!MapManager.Instance.IsVersus) {
+            gameObject.SetActive(false);
         }
     }
 
@@ -44,6 +52,10 @@ public class MoneyUI : MonoBehaviour
     }
 
     private void Update() {
+        if (!modeResolved) {
+            TryResolveMode();
+            if (!gameObject.activeSelf) return;
+        }
         if (!subscribed) return;
         int localTeam = GetLocalTeamIndex();
         if (localTeam != lastKnownLocalTeam) {
