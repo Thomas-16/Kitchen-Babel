@@ -59,7 +59,8 @@ public class VersusMatchManager : NetworkBehaviour
     [SerializeField] private int startingHearts = 3;
     [SerializeField] private int startingMoney = 0;
     [SerializeField] private int initialNaturalOrders = 2;
-    [SerializeField] private float naturalOrderIntervalSeconds = 15f;
+    // Overwritten by ApplyAutoBalance() from VersusBalanceConfigSO; edit the SO, not here.
+    private float naturalOrderIntervalSeconds = 15f;
     [Tooltip("Fallback expiry duration used only when a RecipeSO's own orderExpiryDurationSeconds is 0 or less.")]
     [SerializeField] private float orderExpiryDurationSeconds = 50f;
     [Tooltip("Multiplier applied to a recipe's expiry duration when the order is a sabotage send.")]
