@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfb406dedb94d4c03908e724510dcd34, type: 3}
+  m_Name: VersusBalanceConfigSO
+  m_EditorClassIdentifier: Assembly-CSharp::VersusBalanceConfigSO
+  tiers:
+  - minPlayersPerTeam: 1
+    naturalOrderIntervalSeconds: 38
+    maxWaitingOrdersPerTeam: 3
+  - minPlayersPerTeam: 2
+    naturalOrderIntervalSeconds: 34
+    maxWaitingOrdersPerTeam: 4
+  - minPlayersPerTeam: 3
+    naturalOrderIntervalSeconds: 30
+    maxWaitingOrdersPerTeam: 5
+  - minPlayersPerTeam: 4
+    naturalOrderIntervalSeconds: 28
+    maxWaitingOrdersPerTeam: 6
+  - minPlayersPerTeam: 5
+    naturalOrderIntervalSeconds: 25
+    maxWaitingOrdersPerTeam: 6
+  fallback:
+    minPlayersPerTeam: 1
+    naturalOrderIntervalSeconds: 30
+    maxWaitingOrdersPerTeam: 6
