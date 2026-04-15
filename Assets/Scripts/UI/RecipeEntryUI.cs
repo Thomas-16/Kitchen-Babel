@@ -8,7 +8,7 @@ public class RecipeEntryUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI recipeNameText;
     [SerializeField] private TextMeshProUGUI costText;
-    [SerializeField] private Image iconImage;
+    [SerializeField] private Image[] iconImages;
     [SerializeField] private ButtonManager orderButton;
     [SerializeField] private GameObject unavailableOverlay;
 
@@ -23,14 +23,21 @@ public class RecipeEntryUI : MonoBehaviour
         recipeNameText.text = recipeSO.recipeName;
         costText.text = $"${cost}";
 
-        if (recipeSO.kitchenObjectSOList != null && recipeSO.kitchenObjectSOList.Count > 0)
+        var ingredients = recipeSO.kitchenObjectSOList;
+        int ingredientCount = ingredients != null ? ingredients.Count : 0;
+        for (int i = 0; i < iconImages.Length; i++)
         {
-            iconImage.sprite = recipeSO.kitchenObjectSOList[0].sprite;
-            iconImage.enabled = true;
-        }
-        else
-        {
-            iconImage.enabled = false;
+            Image icon = iconImages[i];
+            if (i < ingredientCount)
+            {
+                icon.sprite = ingredients[i].sprite;
+                icon.enabled = true;
+                icon.gameObject.SetActive(true);
+            }
+            else
+            {
+                icon.gameObject.SetActive(false);
+            }
         }
 
         SetAffordable(canAfford);
