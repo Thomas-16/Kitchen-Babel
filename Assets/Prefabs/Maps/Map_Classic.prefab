@@ -224,6 +224,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &1164620741537088058
 GameObject:
   m_ObjectHideFlags: 0
@@ -273,6 +274,7 @@ MonoBehaviour:
   isShuffleable: 1
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &1414786473671263231
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,6 +326,7 @@ MonoBehaviour:
   flexOptions:
   - RawGuidValue: e86cfe879e5de3a46bee8b1ca47c27b5
   - RawGuidValue: 05e98f0a5285e3c4489cd0a4dfc165fc
+  versusOnly: 0
 --- !u!1 &1896247750877081412
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,6 +376,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &1918164023061728590
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,6 +428,7 @@ MonoBehaviour:
   flexOptions:
   - RawGuidValue: e86cfe879e5de3a46bee8b1ca47c27b5
   - RawGuidValue: 05e98f0a5285e3c4489cd0a4dfc165fc
+  versusOnly: 0
 --- !u!1 &2005857889805701974
 GameObject:
   m_ObjectHideFlags: 0
@@ -565,6 +570,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &2658672934974782234
 GameObject:
   m_ObjectHideFlags: 0
@@ -614,6 +620,7 @@ MonoBehaviour:
   isShuffleable: 1
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &2740018526468245741
 GameObject:
   m_ObjectHideFlags: 0
@@ -700,6 +707,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &3070545159180630417
 GameObject:
   m_ObjectHideFlags: 0
@@ -786,6 +794,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &3202377438274544734
 GameObject:
   m_ObjectHideFlags: 0
@@ -835,6 +844,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &3727187678443450447
 GameObject:
   m_ObjectHideFlags: 0
@@ -884,6 +894,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &3999452038341956280
 GameObject:
   m_ObjectHideFlags: 0
@@ -933,6 +944,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &4165460066710309264
 GameObject:
   m_ObjectHideFlags: 0
@@ -1013,6 +1025,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &4261055688573374185
 GameObject:
   m_ObjectHideFlags: 0
@@ -1213,6 +1226,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &4519835083433557660
 GameObject:
   m_ObjectHideFlags: 0
@@ -1262,6 +1276,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &4694957908748661115
 GameObject:
   m_ObjectHideFlags: 0
@@ -1313,6 +1328,7 @@ MonoBehaviour:
   flexOptions:
   - RawGuidValue: e86cfe879e5de3a46bee8b1ca47c27b5
   - RawGuidValue: 05e98f0a5285e3c4489cd0a4dfc165fc
+  versusOnly: 0
 --- !u!1 &4774856981727927418
 GameObject:
   m_ObjectHideFlags: 0
@@ -1474,6 +1490,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &5369900977572950197
 GameObject:
   m_ObjectHideFlags: 0
@@ -1523,6 +1540,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &5513659170274178118
 GameObject:
   m_ObjectHideFlags: 0
@@ -1572,6 +1590,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &5597796555238535093
 GameObject:
   m_ObjectHideFlags: 0
@@ -1621,6 +1640,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &5968966036115219518
 GameObject:
   m_ObjectHideFlags: 0
@@ -1670,6 +1690,7 @@ MonoBehaviour:
   isShuffleable: 1
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &6178184628169904994
 GameObject:
   m_ObjectHideFlags: 0
@@ -2055,6 +2076,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &6753285869566592342
 GameObject:
   m_ObjectHideFlags: 0
@@ -2328,6 +2350,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &7139932684716251012
 GameObject:
   m_ObjectHideFlags: 0
@@ -2408,6 +2431,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &7831487864739381521
 GameObject:
   m_ObjectHideFlags: 0
@@ -2457,6 +2481,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &8125875488573256985
 GameObject:
   m_ObjectHideFlags: 0
@@ -2506,6 +2531,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &8167509048725523090
 GameObject:
   m_ObjectHideFlags: 0
@@ -2698,6 +2724,7 @@ MonoBehaviour:
   isShuffleable: 1
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &9000658487617781042
 GameObject:
   m_ObjectHideFlags: 0
@@ -2709,7 +2736,7 @@ GameObject:
   - component: {fileID: 2566463855107221644}
   - component: {fileID: 8556895686847801037}
   m_Layer: 0
-  m_Name: ClearCounter_Placeholder
+  m_Name: SabotageCounter_Placeholder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2743,10 +2770,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CounterPlaceholder
   counterPrefab:
-    RawGuidValue: 0b0e670da4bb1334594c571071e297fc
+    RawGuidValue: 3c3eee0699e0a0b498b607c4f8bea1ed
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 1
 --- !u!1 &9079239245100647405
 GameObject:
   m_ObjectHideFlags: 0
@@ -2796,6 +2824,7 @@ MonoBehaviour:
   isShuffleable: 1
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1 &9158298892909260864
 GameObject:
   m_ObjectHideFlags: 0
@@ -2845,6 +2874,7 @@ MonoBehaviour:
   isShuffleable: 0
   isFlex: 0
   flexOptions: []
+  versusOnly: 0
 --- !u!1001 &1176840993796280298
 PrefabInstance:
   m_ObjectHideFlags: 0

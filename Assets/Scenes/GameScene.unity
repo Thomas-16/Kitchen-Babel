@@ -5161,12 +5161,14 @@ MonoBehaviour:
   heartLossMoneyBonus: 30
   heartLossOrderPauseSeconds: 8
   heartLossSabotageShieldSeconds: 8
+  sabotageCooldownSeconds: 6
   _TeamHearts: 
   _TeamMoney: 
   _TeamSuccessfulRecipes: 
   _TeamOrdersVersion: 
   _TeamOrderPauseUntilTick: 
   _TeamSabotageShieldUntilTick: 
+  _TeamSabotageCooldownUntilTick: 
   _WinningTeamIndex: -1
 --- !u!4 &846354832
 Transform:
@@ -7867,6 +7869,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
   mapList: {fileID: 11400000, guid: 709bc8887cfe27441a561f1829df9269, type: 2}
   virtualCamera: {fileID: 1686197247}
+  coopFallbackCounterPrefab:
+    RawGuidValue: 0b0e670da4bb1334594c571071e297fc
   _MapIndex: -1
   _RandomSeed: 0
   _MapReady:

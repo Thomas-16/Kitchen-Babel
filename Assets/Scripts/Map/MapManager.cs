@@ -14,6 +14,7 @@ public class MapManager : NetworkBehaviour
 
     [SerializeField] private MapListSO mapList;
     [SerializeField] private CinemachineVirtualCamera virtualCamera;
+    [SerializeField] private NetworkPrefabRef coopFallbackCounterPrefab;
 
     [Networked] public int MapIndex { get; set; } = -1;
     [Networked] public int RandomSeed { get; set; }
@@ -241,6 +242,18 @@ public class MapManager : NetworkBehaviour
         System.Random rng = new System.Random(RandomSeed);
 
         NetworkPrefabRef[] resolvedPrefabs = MapRandomizer.ResolveFlexChoices(placeholders, rng);
+
+        if (!IsVersus)
+        {
+            for (int i = 0; i < placeholders.Length; i++)
+            {
+                if (placeholders[i].VersusOnly && !placeholders[i].IsFlex)
+                {
+                    resolvedPrefabs[i] = coopFallbackCounterPrefab;
+                }
+            }
+        }
+
         MapRandomizer.ShufflePlaceholderPositions(placeholders, rng);
 
         int capturedTeamIndex = teamIndex;
