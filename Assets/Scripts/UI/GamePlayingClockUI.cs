@@ -11,6 +11,16 @@ public class GamePlayingClockUI : MonoBehaviour
             if(gameObject.activeSelf) gameObject.SetActive(false);
             return;
         }
+        if(KitchenGameManager.Instance.IsGameOver()){
+            timerImage.fillAmount = 0f;
+            return;
+        }
+
+        if(!KitchenGameManager.Instance.IsGamePlaying()){
+            timerImage.fillAmount = 1f;
+            return;
+        }
+
         timerImage.fillAmount = KitchenGameManager.Instance.GetGamePlayingTimerNormalized();
     }
 }

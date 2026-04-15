@@ -162,6 +162,7 @@ public class VersusMatchManager : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+        if (LobbyManager.GetCachedMatchMode() != LobbyManager.MatchModeVersus) return;
         if (!KitchenGameManager.IsReady) return;
         if (!KitchenGameManager.Instance.IsGamePlaying()) return;
         if (WinningTeamIndex != -1) return;

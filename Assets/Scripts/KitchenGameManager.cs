@@ -129,6 +129,6 @@ public class KitchenGameManager : NetworkBehaviour
         return (State)NetworkedState == State.GameOver;
     }
     public float GetGamePlayingTimerNormalized(){
-        return 1 - GamePlayingTimer / gamePlayingTimerMax;
+        return Mathf.Clamp01(GamePlayingTimer / gamePlayingTimerMax);
     }
 }
