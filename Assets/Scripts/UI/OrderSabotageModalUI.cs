@@ -46,6 +46,7 @@ public class OrderSabotageModalUI : MonoBehaviour
         {
             VersusMatchManager.Instance.OnTeamMoneyChanged -= VersusMatchManager_OnTeamMoneyChanged;
             VersusMatchManager.Instance.OnTeamOrdersChanged -= VersusMatchManager_OnTeamOrdersChanged;
+            VersusMatchManager.Instance.OnSabotageRequestResolved -= VersusMatchManager_OnSabotageRequestResolved;
         }
     }
 
@@ -57,6 +58,7 @@ public class OrderSabotageModalUI : MonoBehaviour
         subscribed = true;
         VersusMatchManager.Instance.OnTeamMoneyChanged += VersusMatchManager_OnTeamMoneyChanged;
         VersusMatchManager.Instance.OnTeamOrdersChanged += VersusMatchManager_OnTeamOrdersChanged;
+        VersusMatchManager.Instance.OnSabotageRequestResolved += VersusMatchManager_OnSabotageRequestResolved;
     }
 
     private void VersusMatchManager_OnTeamMoneyChanged(object sender, EventArgs e)
@@ -66,6 +68,14 @@ public class OrderSabotageModalUI : MonoBehaviour
 
     private void VersusMatchManager_OnTeamOrdersChanged(object sender, VersusMatchManager.TeamEventArgs e)
     {
+        if (isOpen) Refresh();
+    }
+
+    private void VersusMatchManager_OnSabotageRequestResolved(object sender, VersusMatchManager.SabotageRequestEventArgs e)
+    {
+        if (!e.Success) return;
+
+        if (sentNotification != null) sentNotification.AnimateNotification();
         if (isOpen) Refresh();
     }
 
@@ -215,8 +225,6 @@ public class OrderSabotageModalUI : MonoBehaviour
 
         int opponentTeam = 1 - localTeam;
         VersusMatchManager.Instance.RPC_RequestSabotageOrder(opponentTeam, recipeIndex);
-
-        if (sentNotification != null) sentNotification.AnimateNotification();
     }
 
     private static int GetLocalTeamIndex()

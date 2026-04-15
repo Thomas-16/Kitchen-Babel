@@ -21,6 +21,7 @@ public class VersusMatchManager : NetworkBehaviour
     public event EventHandler<TeamEventArgs> OnTeamOrdersChanged;
     public event EventHandler<TeamEventArgs> OnTeamSuccessfulRecipesChanged;
     public event EventHandler<DeliveryAttemptEventArgs> OnDeliveryAttempted;
+    public event EventHandler<SabotageRequestEventArgs> OnSabotageRequestResolved;
 
     public class TeamEventArgs : EventArgs
     {
@@ -30,6 +31,14 @@ public class VersusMatchManager : NetworkBehaviour
     public class DeliveryAttemptEventArgs : EventArgs
     {
         public int TeamIndex;
+        public bool Success;
+    }
+
+    public class SabotageRequestEventArgs : EventArgs
+    {
+        public int TeamIndex;
+        public int TargetTeamIndex;
+        public int RecipeIndex;
         public bool Success;
     }
 
@@ -472,20 +481,51 @@ public class VersusMatchManager : NetworkBehaviour
         });
     }
 
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_OnSabotageRequestResolved(PlayerRef requester, int attackerTeam, int targetTeamIndex, int recipeIndex, NetworkBool success)
+    {
+        if (Runner.LocalPlayer != requester) return;
+
+        OnSabotageRequestResolved?.Invoke(this, new SabotageRequestEventArgs
+        {
+            TeamIndex = attackerTeam,
+            TargetTeamIndex = targetTeamIndex,
+            RecipeIndex = recipeIndex,
+            Success = success,
+        });
+    }
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_RequestSabotageOrder(int targetTeamIndex, int recipeIndex, RpcInfo info = default)
     {
         int attackerTeam = ResolvePlayerTeam(info.Source);
-        if (attackerTeam < 0 || attackerTeam >= TeamCount) return;
-        if (targetTeamIndex == attackerTeam) return;
-        if (Runner.Tick < TeamSabotageCooldownUntilTick[attackerTeam]) return;
+        if (attackerTeam < 0 || attackerTeam >= TeamCount)
+        {
+            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            return;
+        }
+        if (targetTeamIndex == attackerTeam)
+        {
+            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            return;
+        }
+        if (Runner.Tick < TeamSabotageCooldownUntilTick[attackerTeam])
+        {
+            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            return;
+        }
 
         int cost = ComputeRecipeReward(recipeIndex);
-        if (cost > 0 && !TrySpendMoney(attackerTeam, cost)) return;
+        if (cost > 0 && !TrySpendMoney(attackerTeam, cost))
+        {
+            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            return;
+        }
 
         if (!TryAddSabotageOrder(targetTeamIndex, recipeIndex))
         {
             if (cost > 0) AddMoney(attackerTeam, cost);
+            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
         }
 
@@ -495,6 +535,8 @@ public class VersusMatchManager : NetworkBehaviour
             if (cooldownUntil > TeamSabotageCooldownUntilTick[attackerTeam])
                 TeamSabotageCooldownUntilTick.Set(attackerTeam, cooldownUntil);
         }
+
+        RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, true);
     }
 
     private int ResolvePlayerTeam(PlayerRef playerRef)

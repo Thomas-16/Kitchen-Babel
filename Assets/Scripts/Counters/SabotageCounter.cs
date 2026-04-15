@@ -54,9 +54,15 @@ public class SabotageCounter : BaseCounter, IHasProgress
         int remainingTicks = Mathf.Max(localRemaining, shieldRemaining);
         if (remainingTicks <= 0) return 0f;
 
-        float maxSeconds = manager.MaxBlockDurationSeconds;
-        if (maxSeconds <= 0f) return 0f;
-        int totalTicks = Mathf.CeilToInt(maxSeconds * runner.TickRate);
+        int totalTicks = 0;
+        if (localRemaining >= shieldRemaining)
+        {
+            totalTicks = Mathf.CeilToInt(manager.SabotageCooldownSeconds * runner.TickRate);
+        }
+        else
+        {
+            totalTicks = Mathf.CeilToInt(manager.HeartLossSabotageShieldSeconds * runner.TickRate);
+        }
         if (totalTicks <= 0) return 0f;
 
         return Mathf.Clamp((float)remainingTicks / totalTicks, 0f, 0.9999f);
