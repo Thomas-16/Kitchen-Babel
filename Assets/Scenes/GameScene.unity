@@ -5153,7 +5153,6 @@ MonoBehaviour:
   startingHearts: 3
   startingMoney: 0
   initialNaturalOrders: 2
-  naturalOrderIntervalSeconds: 30
   orderExpiryDurationSeconds: 120
   sabotageExpiryMultiplier: 0.8
   wrongDeliveryMoneyPenalty: 50
