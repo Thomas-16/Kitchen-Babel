@@ -89,6 +89,7 @@ public class VersusDeliveryManagerUI : MonoBehaviour
             float seconds = recipeSO.orderExpiryDurationSeconds > 0f
                 ? recipeSO.orderExpiryDurationSeconds
                 : VersusMatchManager.Instance.OrderExpiryDurationSeconds;
+            if (order.IsSabotage) seconds *= VersusMatchManager.Instance.SabotageExpiryMultiplier;
             int totalDurationTicks = runner != null
                 ? Mathf.Max(1, Mathf.RoundToInt(seconds / runner.DeltaTime))
                 : 1;

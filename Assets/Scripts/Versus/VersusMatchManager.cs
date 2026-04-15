@@ -58,9 +58,12 @@ public class VersusMatchManager : NetworkBehaviour
     [SerializeField] private float naturalOrderIntervalSeconds = 15f;
     [Tooltip("Fallback expiry duration used only when a RecipeSO's own orderExpiryDurationSeconds is 0 or less.")]
     [SerializeField] private float orderExpiryDurationSeconds = 50f;
+    [Tooltip("Multiplier applied to a recipe's expiry duration when the order is a sabotage send.")]
+    [SerializeField] private float sabotageExpiryMultiplier = 0.8f;
     [SerializeField] private int wrongDeliveryMoneyPenalty = 50;
 
     public float OrderExpiryDurationSeconds => orderExpiryDurationSeconds;
+    public float SabotageExpiryMultiplier => sabotageExpiryMultiplier;
 
     [Header("Anti-Snowball Tuning")]
     [SerializeField] private int heartLossMoneyBonus = 30;
@@ -189,7 +192,7 @@ public class VersusMatchManager : NetworkBehaviour
         SweepExpiredOrders(1);
     }
 
-    private int ComputeExpirationTickForRecipe(int recipeIndex)
+    private int ComputeExpirationTickForRecipe(int recipeIndex, float multiplier = 1f)
     {
         float seconds = orderExpiryDurationSeconds;
         if (recipeListSO != null
@@ -199,6 +202,7 @@ public class VersusMatchManager : NetworkBehaviour
             float perRecipe = recipeListSO.recipeSOList[recipeIndex].orderExpiryDurationSeconds;
             if (perRecipe > 0f) seconds = perRecipe;
         }
+        seconds *= multiplier;
         return Runner.Tick + Mathf.Max(1, Mathf.RoundToInt(seconds / Runner.DeltaTime));
     }
 
@@ -247,7 +251,7 @@ public class VersusMatchManager : NetworkBehaviour
         var queue = GetTeamOrders(targetTeamIndex);
         if (queue.Count >= OrderCapacity) return false;
 
-        int expirationTick = ComputeExpirationTickForRecipe(recipeIndex);
+        int expirationTick = ComputeExpirationTickForRecipe(recipeIndex, sabotageExpiryMultiplier);
         queue.Add(new OrderData
         {
             RecipeIndex = recipeIndex,
