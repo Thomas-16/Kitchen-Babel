@@ -21,10 +21,7 @@ public class OrderSabotageModalUI : MonoBehaviour
     private void Awake()
     {
         if (recipeEntryTemplate != null) recipeEntryTemplate.gameObject.SetActive(false);
-    }
 
-    private void Start()
-    {
         SabotageCounter.OnAnyLocalOpen += SabotageCounter_OnAnyLocalOpen;
 
         if (modalWindow != null)
