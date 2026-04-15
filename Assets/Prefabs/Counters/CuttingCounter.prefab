@@ -128,6 +128,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   counterTopPoint: {fileID: 4014308815210288424}
+  _SpawnPosition: {x: 0, y: 0, z: 0}
+  _SpawnRotation: {x: 0, y: 0, z: 0, w: 0}
+  _TeamIndex: -1
   cuttingRecipeSOArray:
   - {fileID: 11400000, guid: f00780eb85a83c54c98a1238d6e4a8b1, type: 2}
   - {fileID: 11400000, guid: b57dcb9d266befe4aa1bd0819c74c212, type: 2}
@@ -549,6 +552,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6319484636956300676, guid: 9ed85aaaa16ca0d4988de06011070de7,
+        type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

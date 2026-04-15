@@ -56,6 +56,12 @@ public class VersusMatchManager : NetworkBehaviour
     [SerializeField] private int heartLossMoneyBonus = 30;
     [SerializeField] private float heartLossOrderPauseSeconds = 8f;
     [SerializeField] private float heartLossSabotageShieldSeconds = 8f;
+    [SerializeField] private float sabotageCooldownSeconds = 6f;
+
+    public float HeartLossOrderPauseSeconds => heartLossOrderPauseSeconds;
+    public float HeartLossSabotageShieldSeconds => heartLossSabotageShieldSeconds;
+    public float SabotageCooldownSeconds => sabotageCooldownSeconds;
+    public float MaxBlockDurationSeconds => Mathf.Max(heartLossSabotageShieldSeconds, sabotageCooldownSeconds);
 
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamHearts => default;
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamMoney => default;
@@ -63,6 +69,7 @@ public class VersusMatchManager : NetworkBehaviour
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamOrdersVersion => default;
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamOrderPauseUntilTick => default;
     [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamSabotageShieldUntilTick => default;
+    [Networked, Capacity(TeamCount)] public NetworkArray<int> TeamSabotageCooldownUntilTick => default;
     [Networked] public int WinningTeamIndex { get; set; } = -1;
     [Networked] private NetworkBool IsInitialized { get; set; }
     [Networked] private int NextOrderSpawnTick { get; set; }
@@ -433,6 +440,8 @@ public class VersusMatchManager : NetworkBehaviour
         return recipeListSO.recipeSOList[recipeIndex];
     }
 
+    public RecipeListSO GetRecipeListSO() => recipeListSO;
+
     public int ComputeRecipeReward(int recipeIndex)
     {
         RecipeSO recipeSO = GetRecipeSO(recipeIndex);
@@ -461,5 +470,43 @@ public class VersusMatchManager : NetworkBehaviour
             TeamIndex = teamIndex,
             Success = success,
         });
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_RequestSabotageOrder(int targetTeamIndex, int recipeIndex, RpcInfo info = default)
+    {
+        int attackerTeam = ResolvePlayerTeam(info.Source);
+        if (attackerTeam < 0 || attackerTeam >= TeamCount) return;
+        if (targetTeamIndex == attackerTeam) return;
+        if (Runner.Tick < TeamSabotageCooldownUntilTick[attackerTeam]) return;
+
+        int cost = ComputeRecipeReward(recipeIndex);
+        if (cost > 0 && !TrySpendMoney(attackerTeam, cost)) return;
+
+        if (!TryAddSabotageOrder(targetTeamIndex, recipeIndex))
+        {
+            if (cost > 0) AddMoney(attackerTeam, cost);
+            return;
+        }
+
+        if (sabotageCooldownSeconds > 0f)
+        {
+            int cooldownUntil = Runner.Tick + Mathf.CeilToInt(sabotageCooldownSeconds * Runner.TickRate);
+            if (cooldownUntil > TeamSabotageCooldownUntilTick[attackerTeam])
+                TeamSabotageCooldownUntilTick.Set(attackerTeam, cooldownUntil);
+        }
+    }
+
+    private int ResolvePlayerTeam(PlayerRef playerRef)
+    {
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
+        foreach (Player p in players)
+        {
+            if (p != null && p.Object != null && p.Object.InputAuthority == playerRef)
+            {
+                return p.TeamIndex;
+            }
+        }
+        return -1;
     }
 }
