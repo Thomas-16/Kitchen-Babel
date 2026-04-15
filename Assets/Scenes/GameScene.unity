@@ -5152,13 +5152,13 @@ MonoBehaviour:
   startingHearts: 3
   startingMoney: 0
   initialNaturalOrders: 2
-  naturalOrderIntervalSeconds: 15
-  orderExpiryDurationSeconds: 45
-  wrongDeliveryMoneyPenalty: 60
+  naturalOrderIntervalSeconds: 30
+  orderExpiryDurationSeconds: 120
+  wrongDeliveryMoneyPenalty: 50
   heartLossMoneyBonus: 30
-  heartLossOrderPauseSeconds: 8
-  heartLossSabotageShieldSeconds: 8
-  sabotageCooldownSeconds: 6
+  heartLossOrderPauseSeconds: 6
+  heartLossSabotageShieldSeconds: 6
+  sabotageCooldownSeconds: 5
   _TeamHearts: 
   _TeamMoney: 
   _TeamSuccessfulRecipes: 
