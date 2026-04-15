@@ -25,7 +25,8 @@ public class MainMenuUI : MonoBehaviour
 
         if (NetworkRunnerManager.Instance != null)
         {
-            if (NetworkRunnerManager.Instance.Runner != null && NetworkRunnerManager.Instance.Runner.IsRunning)
+            bool wasDisconnected = NetworkRunnerManager.Instance.WasDisconnected;
+            if (!wasDisconnected && NetworkRunnerManager.Instance.Runner != null && NetworkRunnerManager.Instance.Runner.IsRunning)
             {
                 returningFromGame = true;
             }

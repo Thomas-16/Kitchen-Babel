@@ -24,10 +24,12 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     public bool IsBusy { get; private set; }
     public int SelectedMapIndex { get; set; } = -1;
     public int SelectedGameMode { get; private set; }
+    public bool WasDisconnected { get; private set; }
 
     private bool pendingLobbyManagerSpawn;
     private bool isMigrating;
     private bool isReturningToLobby;
+    private bool disconnectHandled;
 
     private async Task ShutdownRunner()
     {
@@ -76,6 +78,8 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         IsBusy = true;
+        WasDisconnected = false;
+        disconnectHandled = false;
         try
         {
             await ShutdownRunner();
@@ -417,7 +421,12 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (shutdownReason != ShutdownReason.Ok)
         {
-            OnDisconnected?.Invoke();
+            WasDisconnected = true;
+            if (!disconnectHandled)
+            {
+                disconnectHandled = true;
+                OnDisconnected?.Invoke();
+            }
         }
     }
 
@@ -430,7 +439,12 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
             return;
         }
 
-        OnDisconnected?.Invoke();
+        WasDisconnected = true;
+        if (!disconnectHandled)
+        {
+            disconnectHandled = true;
+            OnDisconnected?.Invoke();
+        }
         SceneManager.LoadScene("MainMenuScene");
     }
 
