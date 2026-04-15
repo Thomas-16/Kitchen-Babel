@@ -7,14 +7,12 @@ using UnityEngine;
 
 public class OrderSabotageModalUI : MonoBehaviour
 {
-    [SerializeField] private GameObject modalRoot;
+    [SerializeField] private ModalWindowManager modalWindow;
     [SerializeField] private TextMeshProUGUI bannerText;
     [SerializeField] private TextMeshProUGUI moneyText;
     [SerializeField] private Transform recipeListContainer;
     [SerializeField] private RecipeEntryUI recipeEntryTemplate;
     [SerializeField] private NotificationManager sentNotification;
-    [SerializeField] private ButtonManager cancelButton;
-    [SerializeField] private HotkeyEvent closeHotkey;
 
     private readonly List<RecipeEntryUI> entries = new();
     private bool subscribed;
@@ -23,16 +21,17 @@ public class OrderSabotageModalUI : MonoBehaviour
     private void Awake()
     {
         if (recipeEntryTemplate != null) recipeEntryTemplate.gameObject.SetActive(false);
-        if (modalRoot != null) modalRoot.SetActive(false);
-        else gameObject.SetActive(false);
     }
 
     private void Start()
     {
         SabotageCounter.OnAnyLocalOpen += SabotageCounter_OnAnyLocalOpen;
 
-        if (cancelButton != null) cancelButton.onClick.AddListener(Hide);
-        if (closeHotkey != null) closeHotkey.onHotkeyPress.AddListener(Hide);
+        if (modalWindow != null)
+        {
+            modalWindow.onOpen.AddListener(OnModalOpened);
+            modalWindow.onClose.AddListener(OnModalClosed);
+        }
 
         VersusMatchManager.OnInstanceReady += VersusMatchManager_OnInstanceReady;
         if (VersusMatchManager.Instance != null) SubscribeToManager();
@@ -42,6 +41,11 @@ public class OrderSabotageModalUI : MonoBehaviour
     {
         SabotageCounter.OnAnyLocalOpen -= SabotageCounter_OnAnyLocalOpen;
         VersusMatchManager.OnInstanceReady -= VersusMatchManager_OnInstanceReady;
+        if (modalWindow != null)
+        {
+            modalWindow.onOpen.RemoveListener(OnModalOpened);
+            modalWindow.onClose.RemoveListener(OnModalClosed);
+        }
         if (subscribed && VersusMatchManager.Instance != null)
         {
             VersusMatchManager.Instance.OnTeamMoneyChanged -= VersusMatchManager_OnTeamMoneyChanged;
@@ -75,7 +79,7 @@ public class OrderSabotageModalUI : MonoBehaviour
     {
         if (!e.Success) return;
 
-        if (sentNotification != null) sentNotification.AnimateNotification();
+        if (sentNotification != null) sentNotification.ExpandNotification();
         if (isOpen) Refresh();
     }
 
@@ -89,18 +93,24 @@ public class OrderSabotageModalUI : MonoBehaviour
 
     private void Show()
     {
-        BuildList();
-        Refresh();
-        isOpen = true;
-        if (modalRoot != null) modalRoot.SetActive(true);
-        else gameObject.SetActive(true);
+        if (modalWindow != null) modalWindow.OpenWindow();
     }
 
     private void Hide()
     {
+        if (modalWindow != null) modalWindow.CloseWindow();
+    }
+
+    private void OnModalOpened()
+    {
+        BuildList();
+        Refresh();
+        isOpen = true;
+    }
+
+    private void OnModalClosed()
+    {
         isOpen = false;
-        if (modalRoot != null) modalRoot.SetActive(false);
-        else gameObject.SetActive(false);
     }
 
     private void Update()

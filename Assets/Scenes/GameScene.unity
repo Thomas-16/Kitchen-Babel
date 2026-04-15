@@ -1857,15 +1857,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ced885792f40f044abdeb314e9290937, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OrderSabotageModalUI
-  modalRoot: {fileID: 225512748}
+  modalWindow: {fileID: 225512750}
   bannerText: {fileID: 721266548}
   moneyText: {fileID: 1331217598}
   recipeListContainer: {fileID: 247974501}
   recipeEntryTemplate: {fileID: -692174585941955872, guid: d6eda0828bb5f7d40b0d7ca5bb0cbc5a,
     type: 3}
   sentNotification: {fileID: 2012888081}
-  cancelButton: {fileID: 1590307183}
-  closeHotkey: {fileID: 402717958}
 --- !u!1 &247974500
 GameObject:
   m_ObjectHideFlags: 0
