@@ -17,6 +17,10 @@ public class SoundManager : MonoBehaviour
         if(DeliveryManager.Instance != null){
             SubscribeToDeliveryManager();
         }
+        VersusMatchManager.OnInstanceReady += VersusMatchManager_OnInstanceReady;
+        if(VersusMatchManager.IsReady){
+            SubscribeToVersusMatchManager();
+        }
 
         CuttingCounter.OnAnyCut += CuttingCounter_OnAnyCut;
         Player.OnAnyPickedSomething += Player_OnAnyPickedSomething;
@@ -29,6 +33,18 @@ public class SoundManager : MonoBehaviour
     private void SubscribeToDeliveryManager(){
         DeliveryManager.Instance.OnRecipeSuccess += DeliveryManager_OnRecipeSuccess;
         DeliveryManager.Instance.OnRecipeFailed += DeliveryManager_OnRecipeFailed;
+    }
+    private void VersusMatchManager_OnInstanceReady(object sender, EventArgs e){
+        SubscribeToVersusMatchManager();
+    }
+    private void SubscribeToVersusMatchManager(){
+        VersusMatchManager.Instance.OnDeliveryAttempted += VersusMatchManager_OnDeliveryAttempted;
+    }
+    private void VersusMatchManager_OnDeliveryAttempted(object sender, VersusMatchManager.DeliveryAttemptEventArgs e){
+        DeliveryCounter counter = DeliveryCounter.GetForTeam(e.TeamIndex);
+        if(counter == null) return;
+        AudioClip[] clips = e.Success ? audioClipRefsSO.deliverySuccess : audioClipRefsSO.deliveryFailed;
+        PlaySound(clips, counter.transform.position);
     }
 
     private void TrashCounter_OnAnyObjectTrashed(object sender, EventArgs e){
