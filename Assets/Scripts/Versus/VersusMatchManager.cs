@@ -56,6 +56,7 @@ public class VersusMatchManager : NetworkBehaviour
     [SerializeField] private int startingMoney = 0;
     [SerializeField] private int initialNaturalOrders = 2;
     [SerializeField] private float naturalOrderIntervalSeconds = 15f;
+    [Tooltip("Fallback expiry duration used only when a RecipeSO's own orderExpiryDurationSeconds is 0 or less.")]
     [SerializeField] private float orderExpiryDurationSeconds = 50f;
     [SerializeField] private int wrongDeliveryMoneyPenalty = 50;
 
@@ -188,12 +189,25 @@ public class VersusMatchManager : NetworkBehaviour
         SweepExpiredOrders(1);
     }
 
+    private int ComputeExpirationTickForRecipe(int recipeIndex)
+    {
+        float seconds = orderExpiryDurationSeconds;
+        if (recipeListSO != null
+            && recipeIndex >= 0
+            && recipeIndex < recipeListSO.recipeSOList.Count)
+        {
+            float perRecipe = recipeListSO.recipeSOList[recipeIndex].orderExpiryDurationSeconds;
+            if (perRecipe > 0f) seconds = perRecipe;
+        }
+        return Runner.Tick + Mathf.Max(1, Mathf.RoundToInt(seconds / Runner.DeltaTime));
+    }
+
     private void SpawnNaturalOrderForBothTeams()
     {
         if (recipeListSO == null || recipeListSO.recipeSOList.Count == 0) return;
 
         int recipeIndex = UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count);
-        int expirationTick = Runner.Tick + Mathf.RoundToInt(OrderExpiryDurationSeconds / Runner.DeltaTime);
+        int expirationTick = ComputeExpirationTickForRecipe(recipeIndex);
 
         OrderData order = new OrderData
         {
@@ -233,7 +247,7 @@ public class VersusMatchManager : NetworkBehaviour
         var queue = GetTeamOrders(targetTeamIndex);
         if (queue.Count >= OrderCapacity) return false;
 
-        int expirationTick = Runner.Tick + Mathf.RoundToInt(OrderExpiryDurationSeconds / Runner.DeltaTime);
+        int expirationTick = ComputeExpirationTickForRecipe(recipeIndex);
         queue.Add(new OrderData
         {
             RecipeIndex = recipeIndex,

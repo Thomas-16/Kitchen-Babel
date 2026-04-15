@@ -16,3 +16,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6f8a1d2f745ff17469427564662a82d9, type: 2}
   - {fileID: 11400000, guid: 3bd49a15323e2cc44a80056ab56c8e4c, type: 2}
   recipeName: Burger
+  orderExpiryDurationSeconds: 100

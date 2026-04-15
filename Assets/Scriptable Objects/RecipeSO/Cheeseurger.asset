@@ -17,3 +17,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3bd49a15323e2cc44a80056ab56c8e4c, type: 2}
   - {fileID: 11400000, guid: 21c0ba01392df574f849f0a9006859a8, type: 2}
   recipeName: Cheeseburger
+  orderExpiryDurationSeconds: 120

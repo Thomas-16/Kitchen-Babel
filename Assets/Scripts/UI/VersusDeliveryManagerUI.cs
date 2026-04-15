@@ -80,14 +80,18 @@ public class VersusDeliveryManagerUI : MonoBehaviour
         }
 
         NetworkRunner runner = GetRunner();
-        int totalDurationTicks = runner != null
-            ? Mathf.RoundToInt(VersusMatchManager.Instance.OrderExpiryDurationSeconds / runner.DeltaTime)
-            : 1;
 
         var orders = VersusMatchManager.Instance.GetTeamOrders(localTeam);
         foreach (VersusMatchManager.OrderData order in orders) {
             RecipeSO recipeSO = VersusMatchManager.Instance.GetRecipeSO(order.RecipeIndex);
             if (recipeSO == null) continue;
+
+            float seconds = recipeSO.orderExpiryDurationSeconds > 0f
+                ? recipeSO.orderExpiryDurationSeconds
+                : VersusMatchManager.Instance.OrderExpiryDurationSeconds;
+            int totalDurationTicks = runner != null
+                ? Mathf.Max(1, Mathf.RoundToInt(seconds / runner.DeltaTime))
+                : 1;
 
             Transform recipeTransform = Instantiate(recipeTemplate, container);
             recipeTransform.gameObject.SetActive(true);
