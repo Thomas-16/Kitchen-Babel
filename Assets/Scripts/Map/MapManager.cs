@@ -195,6 +195,15 @@ public class MapManager : NetworkBehaviour
             if (IsVersus)
             {
                 KitchenGameMultiplayer.Instance.SpawnAllPlayersVersus();
+                if (VersusMatchManager.Instance != null)
+                {
+                    VersusMatchManager.Instance.ApplyAutoBalance();
+                }
+                else
+                {
+                    Debug.Log("[MapManager] VersusMatchManager not ready — subscribing for auto-balance.");
+                    VersusMatchManager.OnInstanceReady += OnVersusMatchManagerReadyForBalance;
+                }
             }
             else
             {
@@ -225,6 +234,14 @@ public class MapManager : NetworkBehaviour
         KitchenGameManager.OnInstanceReady -= OnKitchenGameManagerReady;
         Debug.Log("[MapManager] KitchenGameManager now ready — calling TryStartGame()");
         KitchenGameManager.Instance.TryStartGame();
+    }
+
+    private void OnVersusMatchManagerReadyForBalance(object sender, EventArgs e)
+    {
+        VersusMatchManager.OnInstanceReady -= OnVersusMatchManagerReadyForBalance;
+        if (!HasStateAuthority) return;
+        Debug.Log("[MapManager] VersusMatchManager now ready — calling ApplyAutoBalance()");
+        VersusMatchManager.Instance.ApplyAutoBalance();
     }
 
     private void SpawnCountersForTeam(GameObject mapInstance, int teamIndex)

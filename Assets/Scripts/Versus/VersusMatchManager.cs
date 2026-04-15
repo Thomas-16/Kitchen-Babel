@@ -51,6 +51,10 @@ public class VersusMatchManager : NetworkBehaviour
 
     [SerializeField] private RecipeListSO recipeListSO;
 
+    [Header("Auto-Balance")]
+    [Tooltip("Per-team-size tuning curve applied by ApplyAutoBalance() when the match starts. Leave null to use the serialized Match Tuning defaults.")]
+    [SerializeField] private VersusBalanceConfigSO balanceConfig;
+
     [Header("Match Tuning")]
     [SerializeField] private int startingHearts = 3;
     [SerializeField] private int startingMoney = 0;
@@ -93,6 +97,10 @@ public class VersusMatchManager : NetworkBehaviour
     private ChangeDetector changeDetector;
     private readonly int[] lastKnownOrdersVersion = new int[TeamCount];
 
+    // Host-only runtime tuning, overwritten by ApplyAutoBalance(). Defaults keep pre-balance behavior.
+    private int maxWaitingOrdersPerTeam = OrderCapacity;
+    private bool hasAutoBalanced;
+
     public static void ResetStaticData()
     {
         OnInstanceReady = null;
@@ -127,6 +135,47 @@ public class VersusMatchManager : NetworkBehaviour
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         if (Instance == this) Instance = null;
+    }
+
+    // Host-only: scales order-spawn pressure to the larger team's player count using balanceConfig.
+    // Call once from MapManager.FinishSetup() after players spawn and before TryStartGame().
+    public void ApplyAutoBalance()
+    {
+        if (!HasStateAuthority || hasAutoBalanced) return;
+        hasAutoBalanced = true;
+
+        if (balanceConfig == null)
+        {
+            Debug.Log("[VersusMatchManager] Auto-balance skipped — no VersusBalanceConfigSO assigned.");
+            return;
+        }
+
+        int[] teamSizes = new int[TeamCount];
+        foreach (PlayerRef p in Runner.ActivePlayers)
+        {
+            int t = LobbyManager.GetCachedPlayerTeamIndex(p);
+            if (t >= 0 && t < TeamCount) teamSizes[t]++;
+        }
+        int perTeam = Mathf.Max(1, Mathf.Max(teamSizes[0], teamSizes[1]));
+
+        VersusBalanceConfigSO.Tier tier = balanceConfig.fallback;
+        bool tierMatched = false;
+        if (balanceConfig.tiers != null)
+        {
+            foreach (var candidate in balanceConfig.tiers)
+            {
+                if (perTeam >= candidate.minPlayersPerTeam)
+                {
+                    tier = candidate;
+                    tierMatched = true;
+                }
+            }
+        }
+
+        naturalOrderIntervalSeconds = Mathf.Max(0.1f, tier.naturalOrderIntervalSeconds);
+        maxWaitingOrdersPerTeam = Mathf.Clamp(tier.maxWaitingOrdersPerTeam, 1, OrderCapacity);
+
+        Debug.Log($"[VersusMatchManager] Auto-balance: perTeam={perTeam} (A={teamSizes[0]}, B={teamSizes[1]}), matched={tierMatched}, interval={naturalOrderIntervalSeconds}s, maxWaiting={maxWaitingOrdersPerTeam}");
     }
 
     public override void Render()
@@ -225,7 +274,7 @@ public class VersusMatchManager : NetworkBehaviour
         {
             if (nowTick < TeamOrderPauseUntilTick[team]) continue;
             var queue = GetTeamOrders(team);
-            if (queue.Count < OrderCapacity)
+            if (queue.Count < Mathf.Min(maxWaitingOrdersPerTeam, OrderCapacity))
             {
                 queue.Add(order);
                 BumpOrdersVersion(team);
@@ -249,7 +298,7 @@ public class VersusMatchManager : NetworkBehaviour
         if (IsSabotageShielded(targetTeamIndex)) return false;
 
         var queue = GetTeamOrders(targetTeamIndex);
-        if (queue.Count >= OrderCapacity) return false;
+        if (queue.Count >= Mathf.Min(maxWaitingOrdersPerTeam, OrderCapacity)) return false;
 
         int expirationTick = ComputeExpirationTickForRecipe(recipeIndex, sabotageExpiryMultiplier);
         queue.Add(new OrderData
