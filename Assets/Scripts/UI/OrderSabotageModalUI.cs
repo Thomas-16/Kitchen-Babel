@@ -7,6 +7,8 @@ using UnityEngine;
 
 public class OrderSabotageModalUI : MonoBehaviour
 {
+    public static bool IsLocalOpen { get; private set; }
+
     [SerializeField] private ModalWindowManager modalWindow;
     [SerializeField] private TextMeshProUGUI bannerText;
     [SerializeField] private TextMeshProUGUI moneyText;
@@ -36,6 +38,7 @@ public class OrderSabotageModalUI : MonoBehaviour
 
     private void OnDestroy()
     {
+        IsLocalOpen = false;
         SabotageCounter.OnAnyLocalOpen -= SabotageCounter_OnAnyLocalOpen;
         VersusMatchManager.OnInstanceReady -= VersusMatchManager_OnInstanceReady;
         if (modalWindow != null)
@@ -103,11 +106,13 @@ public class OrderSabotageModalUI : MonoBehaviour
         BuildList();
         Refresh();
         isOpen = true;
+        IsLocalOpen = true;
     }
 
     private void OnModalClosed()
     {
         isOpen = false;
+        IsLocalOpen = false;
     }
 
     private void Update()

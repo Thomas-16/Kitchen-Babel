@@ -46,7 +46,8 @@
       "Bash(mv GameOverUI.cs CoopGameOverUI.cs)",
       "Bash(mv GameOverUI.cs.meta CoopGameOverUI.cs.meta)",
       "Bash(ls Coop*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(git *)"
     ]
   }
 }

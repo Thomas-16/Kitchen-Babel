@@ -242,7 +242,9 @@ public class KitchenGameMultiplayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input){
         PlayerNetworkInput playerInput = new PlayerNetworkInput();
-        playerInput.moveDirection = GameInput.Instance.GetMovementVectorNormalized();
+        playerInput.moveDirection = OrderSabotageModalUI.IsLocalOpen
+            ? Vector2.zero
+            : GameInput.Instance.GetMovementVectorNormalized();
 
         if(GameInput.Instance.GetInteractPressed()){
             playerInput.buttons.Set(InputButton.Interact, true);
