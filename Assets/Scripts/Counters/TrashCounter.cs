@@ -11,6 +11,7 @@ public class TrashCounter : BaseCounter
 
     public override void Interact(Player player)
     {
+        if (!IsPlayerAllowed(player)) return;
         if(player.HasKitchenObject()){
             player.GetKitchenObject().DestroySelf();
 

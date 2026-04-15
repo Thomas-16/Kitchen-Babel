@@ -233,19 +233,22 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (Runner == null || !Runner.IsServer) return;
 
-        if (LobbyManager.Instance != null)
+        if (LobbyManager.Instance == null)
         {
-            if (LobbyManager.Instance.MatchMode == LobbyManager.MatchModeVersus
-                && !LobbyManager.Instance.AreTeamsValid())
-            {
-                Debug.LogWarning("[NRM] StartGame aborted — versus mode requires both teams to have at least 1 player.");
-                return;
-            }
-
-            LobbyManager.Instance.SnapshotPlayerColors();
-            SelectedMapIndex = LobbyManager.Instance.SelectedMapIndex;
-            SelectedGameMode = LobbyManager.Instance.MatchMode;
+            Debug.LogError("[NRM] StartGame aborted — LobbyManager not ready.");
+            return;
         }
+
+        if (LobbyManager.Instance.MatchMode == LobbyManager.MatchModeVersus
+            && !LobbyManager.Instance.AreTeamsValid())
+        {
+            Debug.LogWarning("[NRM] StartGame aborted — versus mode requires both teams to have at least 1 player.");
+            return;
+        }
+
+        LobbyManager.Instance.SnapshotPlayerColors();
+        SelectedMapIndex = LobbyManager.Instance.SelectedMapIndex;
+        SelectedGameMode = LobbyManager.Instance.MatchMode;
 
         SetGameInSession(true);
 

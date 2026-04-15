@@ -273,6 +273,7 @@ public class MapManager : NetworkBehaviour
                     {
                         counter.SpawnPosition = pos;
                         counter.SpawnRotation = rot;
+                        counter.HasSpawnTransform = true;
                         counter.TeamIndex = capturedTeamIndex;
                     }
                 }

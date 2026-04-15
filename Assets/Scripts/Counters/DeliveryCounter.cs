@@ -6,27 +6,50 @@ public class DeliveryCounter : BaseCounter
 {
     private static readonly Dictionary<int, DeliveryCounter> countersByTeam = new Dictionary<int, DeliveryCounter>();
 
+    public static void ResetStaticData()
+    {
+        countersByTeam.Clear();
+    }
+
     public static DeliveryCounter GetForTeam(int teamIndex)
     {
         countersByTeam.TryGetValue(teamIndex, out DeliveryCounter counter);
         return counter;
     }
 
+    private int registeredTeamIndex = -1;
+
     public override void Spawned()
     {
         base.Spawned();
-        if (TeamIndex >= 0)
+        TryRegisterForTeam();
+    }
+
+    public override void Render()
+    {
+        // On non-host clients, TeamIndex is -1 when Spawned() fires because the
+        // networked property hasn't been replicated yet. Re-check every render
+        // until the real value arrives so sound-lookups via GetForTeam() work.
+        if (registeredTeamIndex == -1 && TeamIndex >= 0)
         {
-            countersByTeam[TeamIndex] = this;
+            TryRegisterForTeam();
         }
+    }
+
+    private void TryRegisterForTeam()
+    {
+        if (TeamIndex < 0) return;
+        countersByTeam[TeamIndex] = this;
+        registeredTeamIndex = TeamIndex;
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        if (TeamIndex >= 0 && countersByTeam.TryGetValue(TeamIndex, out DeliveryCounter existing) && existing == this)
+        if (registeredTeamIndex >= 0 && countersByTeam.TryGetValue(registeredTeamIndex, out DeliveryCounter existing) && existing == this)
         {
-            countersByTeam.Remove(TeamIndex);
+            countersByTeam.Remove(registeredTeamIndex);
         }
+        registeredTeamIndex = -1;
         base.Despawned(runner, hasState);
     }
 
@@ -34,6 +57,8 @@ public class DeliveryCounter : BaseCounter
     {
         if(player.HasKitchenObject()){
             if(player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject)){
+                if (!IsPlayerAllowed(player)) return;
+
                 if(TeamIndex == -1){
                     DeliveryManager.Instance.DeliverRecipe(this, plateKitchenObject);
                 }else if(VersusMatchManager.IsReady){

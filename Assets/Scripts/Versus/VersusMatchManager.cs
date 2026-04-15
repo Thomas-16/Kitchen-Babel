@@ -517,7 +517,10 @@ public class VersusMatchManager : NetworkBehaviour
         }
 
         int cost = ComputeRecipeReward(recipeIndex);
-        if (cost > 0 && !TrySpendMoney(attackerTeam, cost))
+        // Reject zero-cost sabotages outright — a recipe that sums to $0 indicates
+        // misconfigured ingredient moneyValues, and allowing it would let the attacker
+        // sabotage for free every cooldown cycle.
+        if (cost <= 0 || !TrySpendMoney(attackerTeam, cost))
         {
             RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
@@ -525,7 +528,7 @@ public class VersusMatchManager : NetworkBehaviour
 
         if (!TryAddSabotageOrder(targetTeamIndex, recipeIndex))
         {
-            if (cost > 0) AddMoney(attackerTeam, cost);
+            AddMoney(attackerTeam, cost);
             RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
         }

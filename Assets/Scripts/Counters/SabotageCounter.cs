@@ -12,6 +12,7 @@ public class SabotageCounter : BaseCounter, IHasProgress
     public override void Interact(Player player)
     {
         if (player == null || player.Object == null) return;
+        if (!IsPlayerAllowed(player)) return;
         RPC_OpenForPlayer(player.Object.InputAuthority);
     }
 

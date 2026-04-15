@@ -9,6 +9,15 @@ public class OrderSabotageModalUI : MonoBehaviour
 {
     public static bool IsLocalOpen { get; private set; }
 
+    // Called from ResetStaticDataManager on scene load to clear static state
+    // that could otherwise persist across matches (e.g., after a game-over
+    // while the modal is open, leaving IsLocalOpen=true permanently freezes
+    // player movement in the next match).
+    public static void ResetStaticData()
+    {
+        IsLocalOpen = false;
+    }
+
     [SerializeField] private ModalWindowManager modalWindow;
     [SerializeField] private TextMeshProUGUI bannerText;
     [SerializeField] private TextMeshProUGUI moneyText;
@@ -18,6 +27,7 @@ public class OrderSabotageModalUI : MonoBehaviour
 
     private readonly List<RecipeEntryUI> entries = new();
     private bool subscribed;
+    private bool subscribedToGameManager;
     private bool isOpen;
 
     private void Awake()
@@ -34,6 +44,9 @@ public class OrderSabotageModalUI : MonoBehaviour
 
         VersusMatchManager.OnInstanceReady += VersusMatchManager_OnInstanceReady;
         if (VersusMatchManager.Instance != null) SubscribeToManager();
+
+        KitchenGameManager.OnInstanceReady += KitchenGameManager_OnInstanceReady;
+        if (KitchenGameManager.Instance != null) SubscribeToGameManager();
     }
 
     private void OnDestroy()
@@ -41,6 +54,7 @@ public class OrderSabotageModalUI : MonoBehaviour
         IsLocalOpen = false;
         SabotageCounter.OnAnyLocalOpen -= SabotageCounter_OnAnyLocalOpen;
         VersusMatchManager.OnInstanceReady -= VersusMatchManager_OnInstanceReady;
+        KitchenGameManager.OnInstanceReady -= KitchenGameManager_OnInstanceReady;
         if (modalWindow != null)
         {
             modalWindow.onOpen.RemoveListener(OnModalOpened);
@@ -51,6 +65,10 @@ public class OrderSabotageModalUI : MonoBehaviour
             VersusMatchManager.Instance.OnTeamMoneyChanged -= VersusMatchManager_OnTeamMoneyChanged;
             VersusMatchManager.Instance.OnTeamOrdersChanged -= VersusMatchManager_OnTeamOrdersChanged;
             VersusMatchManager.Instance.OnSabotageRequestResolved -= VersusMatchManager_OnSabotageRequestResolved;
+        }
+        if (subscribedToGameManager && KitchenGameManager.Instance != null)
+        {
+            KitchenGameManager.Instance.OnStateChanged -= KitchenGameManager_OnStateChanged;
         }
     }
 
@@ -63,6 +81,26 @@ public class OrderSabotageModalUI : MonoBehaviour
         VersusMatchManager.Instance.OnTeamMoneyChanged += VersusMatchManager_OnTeamMoneyChanged;
         VersusMatchManager.Instance.OnTeamOrdersChanged += VersusMatchManager_OnTeamOrdersChanged;
         VersusMatchManager.Instance.OnSabotageRequestResolved += VersusMatchManager_OnSabotageRequestResolved;
+    }
+
+    private void KitchenGameManager_OnInstanceReady(object sender, EventArgs e) => SubscribeToGameManager();
+
+    private void SubscribeToGameManager()
+    {
+        if (subscribedToGameManager) return;
+        subscribedToGameManager = true;
+        KitchenGameManager.Instance.OnStateChanged += KitchenGameManager_OnStateChanged;
+    }
+
+    private void KitchenGameManager_OnStateChanged(object sender, EventArgs e)
+    {
+        // Force-close the modal if the game ends while it is open — otherwise
+        // IsLocalOpen stays true across the scene reload and blocks movement
+        // in the next match.
+        if (KitchenGameManager.Instance != null && KitchenGameManager.Instance.IsGameOver() && isOpen)
+        {
+            Hide();
+        }
     }
 
     private void VersusMatchManager_OnTeamMoneyChanged(object sender, EventArgs e)

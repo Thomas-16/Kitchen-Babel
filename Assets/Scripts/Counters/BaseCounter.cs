@@ -14,6 +14,7 @@ public class BaseCounter : NetworkBehaviour, IKitchenObjectParent
 
     [Networked] public Vector3 SpawnPosition { get; set; }
     [Networked] public Quaternion SpawnRotation { get; set; }
+    [Networked] public NetworkBool HasSpawnTransform { get; set; }
     [Networked] public int TeamIndex { get; set; } = -1;
 
     private KitchenObject kitchenObject;
@@ -23,7 +24,10 @@ public class BaseCounter : NetworkBehaviour, IKitchenObjectParent
     {
         if (hasAppliedSpawnTransform) return;
         if (HasStateAuthority) return;
-        if (SpawnPosition == Vector3.zero && SpawnRotation == Quaternion.identity) return;
+        // Gate on an explicit networked flag rather than comparing against
+        // (Vector3.zero, Quaternion.identity) — a Team A counter legitimately
+        // placed at world origin would otherwise never apply its spawn transform.
+        if (!HasSpawnTransform) return;
 
         transform.position = SpawnPosition;
         transform.rotation = SpawnRotation;
@@ -35,6 +39,17 @@ public class BaseCounter : NetworkBehaviour, IKitchenObjectParent
     }
     public virtual void InteractAlternate(Player player){
 
+    }
+
+    // Defence-in-depth team check. The raycast gate in Player.HandleCounterSelection
+    // is the primary enforcement, but this lets subclasses reject cross-team
+    // interactions at the counter level too — including during the brief window
+    // after a client spawns where Player.TeamIndex hasn't replicated yet.
+    protected bool IsPlayerAllowed(Player player){
+        if (player == null) return false;
+        if (TeamIndex == -1) return true;        // co-op counter — anyone can use
+        if (player.TeamIndex == -1) return false; // player team not yet synced
+        return player.TeamIndex == TeamIndex;
     }
 
     public Transform GetKitchenObjectFollowTransform(){

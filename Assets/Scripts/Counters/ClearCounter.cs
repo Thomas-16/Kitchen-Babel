@@ -5,6 +5,7 @@ public class ClearCounter : BaseCounter
     [SerializeField] private KitchenObjectSO kitchenObjectSO;
 
     public override void Interact(Player player){
+        if (!IsPlayerAllowed(player)) return;
         if(!HasKitchenObject()){
             if(player.HasKitchenObject()){
                 player.GetKitchenObject().SetKitchenObjectParent(this);

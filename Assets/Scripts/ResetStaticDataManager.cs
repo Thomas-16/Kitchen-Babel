@@ -6,9 +6,11 @@ public class ResetStaticDataManager : MonoBehaviour
         CuttingCounter.ResetStaticData();
         BaseCounter.ResetStaticData();
         TrashCounter.ResetStaticData();
+        DeliveryCounter.ResetStaticData();
         Player.ResetStaticData();
         KitchenGameManager.ResetStaticData();
         DeliveryManager.ResetStaticData();
         VersusMatchManager.ResetStaticData();
+        OrderSabotageModalUI.ResetStaticData();
     }
 }

@@ -47,7 +47,9 @@
       "Bash(mv GameOverUI.cs.meta CoopGameOverUI.cs.meta)",
       "Bash(ls Coop*)",
       "Bash(powershell:*)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(grep \"RawGuidValue: 3c3eee0699e0a0b498b607c4f8bea1ed\" Assets/Prefabs/Counters/*.prefab -l)",
+      "Bash(grep \"guid: 3c3eee0699e0a0b498b607c4f8bea1ed\" Assets/Prefabs/Counters/*.prefab.meta -l)"
     ]
   }
 }
