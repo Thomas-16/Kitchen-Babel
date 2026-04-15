@@ -27,7 +27,7 @@ public class KitchenGameManager : NetworkBehaviour
     [Networked] private float ReturnToLobbyTimer { get; set; }
     [Networked] public int VersusWinningTeamIndex { get; set; } = -1;
 
-    private float gamePlayingTimerMax = 30f;
+    private float gamePlayingTimerMax = 120f;
     private float returnToLobbyDelay = 5f;
     private ChangeDetector changeDetector;
 
