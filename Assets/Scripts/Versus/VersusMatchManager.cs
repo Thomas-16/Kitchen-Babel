@@ -498,34 +498,35 @@ public class VersusMatchManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_RequestSabotageOrder(int targetTeamIndex, int recipeIndex, RpcInfo info = default)
     {
-        int attackerTeam = ResolvePlayerTeam(info.Source);
+        PlayerRef requester = info.Source.IsNone ? Runner.LocalPlayer : info.Source;
+        int attackerTeam = ResolvePlayerTeam(requester);
         if (attackerTeam < 0 || attackerTeam >= TeamCount)
         {
-            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
         }
         if (targetTeamIndex == attackerTeam)
         {
-            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
         }
         if (Runner.Tick < TeamSabotageCooldownUntilTick[attackerTeam])
         {
-            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
         }
 
         int cost = ComputeRecipeReward(recipeIndex);
         if (cost > 0 && !TrySpendMoney(attackerTeam, cost))
         {
-            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
         }
 
         if (!TryAddSabotageOrder(targetTeamIndex, recipeIndex))
         {
             if (cost > 0) AddMoney(attackerTeam, cost);
-            RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, false);
+            RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, false);
             return;
         }
 
@@ -536,7 +537,7 @@ public class VersusMatchManager : NetworkBehaviour
                 TeamSabotageCooldownUntilTick.Set(attackerTeam, cooldownUntil);
         }
 
-        RPC_OnSabotageRequestResolved(info.Source, attackerTeam, targetTeamIndex, recipeIndex, true);
+        RPC_OnSabotageRequestResolved(requester, attackerTeam, targetTeamIndex, recipeIndex, true);
     }
 
     private int ResolvePlayerTeam(PlayerRef playerRef)
