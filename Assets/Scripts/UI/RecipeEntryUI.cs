@@ -33,9 +33,6 @@ public class RecipeEntryUI : MonoBehaviour
             iconImage.enabled = false;
         }
 
-        orderButton.onClick.RemoveAllListeners();
-        orderButton.onClick.AddListener(HandleOrderClicked);
-
         SetAffordable(canAfford);
     }
 
@@ -45,7 +42,7 @@ public class RecipeEntryUI : MonoBehaviour
         orderButton.Interactable(canAfford);
     }
 
-    private void HandleOrderClicked()
+    public void HandleOrderClicked()
     {
         onOrder?.Invoke(recipeIndex);
     }

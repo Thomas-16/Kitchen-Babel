@@ -1140,7 +1140,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RecipeEntryUI
   recipeNameText: {fileID: 8853847684141030544}
   costText: {fileID: 2714302858105074781}
-  iconImage: {fileID: 1322831684049840157}
+  iconImage: {fileID: 601127267009412757}
   orderButton: {fileID: 3050824844202753436}
   unavailableOverlay: {fileID: 6879430833059993030}
 --- !u!1 &3428182851716468670
