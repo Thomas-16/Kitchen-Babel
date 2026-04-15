@@ -5149,11 +5149,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VersusMatchManager
   recipeListSO: {fileID: 11400000, guid: 28a55dd3f3da1914086acfcb72e26e80, type: 2}
+  balanceConfig: {fileID: 11400000, guid: bfcb035a3111a49aca02b0315a5ef9f3, type: 2}
   startingHearts: 3
   startingMoney: 0
   initialNaturalOrders: 2
   naturalOrderIntervalSeconds: 30
   orderExpiryDurationSeconds: 120
+  sabotageExpiryMultiplier: 0.8
   wrongDeliveryMoneyPenalty: 50
   heartLossMoneyBonus: 30
   heartLossOrderPauseSeconds: 6
