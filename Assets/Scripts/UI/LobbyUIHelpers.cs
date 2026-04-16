@@ -5,6 +5,18 @@ using UnityEngine;
 public static class LobbyUIHelpers
 {
     public const string ColorPrefsKey = "HorizontalSelector_PlayerColor";
+    public const int CoopMaxPlayers = 6;
+    public const int VersusMaxPlayers = 10;
+
+    public static void PopulateMaxPlayersDropdown(Dropdown maxPlayersDropdown, int gameMode)
+    {
+        if (maxPlayersDropdown == null) return;
+        int max = gameMode == LobbyManager.MatchModeVersus ? VersusMaxPlayers : CoopMaxPlayers;
+        maxPlayersDropdown.items.Clear();
+        for (int i = 2; i <= max; i++)
+            maxPlayersDropdown.CreateNewItem(i.ToString(), false);
+        maxPlayersDropdown.Initialize();
+    }
 
     public static void PopulateMapDropdown(Dropdown mapDropdown, MapListSO mapList)
     {

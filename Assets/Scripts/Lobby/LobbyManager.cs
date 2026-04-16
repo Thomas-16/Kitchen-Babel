@@ -8,6 +8,7 @@ public class LobbyManager : NetworkBehaviour
 {
     public const int MatchModeCoop = 0;
     public const int MatchModeVersus = 1;
+    public const int MaxPlayersPerTeam = 6;
 
     public static LobbyManager Instance { get; private set; }
 
@@ -232,6 +233,9 @@ public class LobbyManager : NetworkBehaviour
             {
                 LobbyPlayerData data = Players.Get(i);
                 int newTeam = 1 - data.TeamIndex;
+
+                if (GetTeamCount(newTeam) >= MaxPlayersPerTeam) return;
+
                 data.TeamIndex = newTeam;
 
                 if (IsColorTakenOnTeam(data.ColorIndex, player, newTeam))
@@ -278,7 +282,7 @@ public class LobbyManager : NetworkBehaviour
 
     private int GetNextAvailableColorOnTeam(int startIndex, PlayerRef excludePlayer, int teamIndex)
     {
-        int colorCount = 6;
+        int colorCount = MaxPlayersPerTeam;
         for (int i = 0; i < colorCount; i++)
         {
             int candidate = ((startIndex + i) % colorCount + colorCount) % colorCount;
@@ -290,7 +294,7 @@ public class LobbyManager : NetworkBehaviour
 
     private int GetPrevAvailableColorOnTeam(int startIndex, PlayerRef excludePlayer, int teamIndex)
     {
-        int colorCount = 6;
+        int colorCount = MaxPlayersPerTeam;
         for (int i = 0; i < colorCount; i++)
         {
             int candidate = ((startIndex - i) % colorCount + colorCount) % colorCount;
@@ -332,6 +336,8 @@ public class LobbyManager : NetworkBehaviour
     {
         int countA = GetTeamCount(0);
         int countB = GetTeamCount(1);
+        if (countA >= MaxPlayersPerTeam) return 1;
+        if (countB >= MaxPlayersPerTeam) return 0;
         return countA <= countB ? 0 : 1;
     }
 

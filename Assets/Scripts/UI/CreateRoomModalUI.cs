@@ -12,6 +12,7 @@ public class CreateRoomModalUI : MonoBehaviour
     [SerializeField] private TMP_InputField passwordInputField;
     [SerializeField] private GameObject invalidPasswordText;
     [SerializeField] private RectTransform layoutRoot;
+    [SerializeField] private Michsky.UI.Heat.Dropdown maxPlayersDropdown;
 
     private int selectedMaxPlayers = 2;
     private int selectedGameMode = 0;
@@ -46,6 +47,16 @@ public class CreateRoomModalUI : MonoBehaviour
     public void OnGameModeChanged(int index)
     {
         selectedGameMode = index;
+        LobbyUIHelpers.PopulateMaxPlayersDropdown(maxPlayersDropdown, selectedGameMode);
+
+        int maxAllowed = selectedGameMode == LobbyManager.MatchModeVersus
+            ? LobbyUIHelpers.VersusMaxPlayers
+            : LobbyUIHelpers.CoopMaxPlayers;
+        if (selectedMaxPlayers > maxAllowed)
+            selectedMaxPlayers = maxAllowed;
+
+        if (maxPlayersDropdown != null)
+            maxPlayersDropdown.SetDropdownIndex(selectedMaxPlayers - 2);
     }
 
     public void OnRequirePasswordChanged(bool value)
@@ -100,6 +111,8 @@ public class CreateRoomModalUI : MonoBehaviour
         selectedGameMode = 0;
         requirePassword = false;
         isCreating = false;
+        LobbyUIHelpers.PopulateMaxPlayersDropdown(maxPlayersDropdown, selectedGameMode);
+        if (maxPlayersDropdown != null) maxPlayersDropdown.SetDropdownIndex(0);
         if (passwordInputContainer != null) passwordInputContainer.SetActive(false);
         if (passwordInputField != null) passwordInputField.text = "";
         if (invalidPasswordText != null) invalidPasswordText.SetActive(false);
