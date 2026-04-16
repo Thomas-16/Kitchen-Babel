@@ -15,6 +15,12 @@ public static class LobbyUIHelpers
         maxPlayersDropdown.items.Clear();
         for (int i = 2; i <= max; i++)
             maxPlayersDropdown.CreateNewItem(i.ToString(), false);
+
+        int lastIndex = maxPlayersDropdown.items.Count - 1;
+        maxPlayersDropdown.selectedItemIndex = lastIndex < 0
+            ? 0
+            : Mathf.Clamp(maxPlayersDropdown.selectedItemIndex, 0, lastIndex);
+
         maxPlayersDropdown.Initialize();
     }
 
