@@ -109,6 +109,10 @@ public class NetworkRunnerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public async void CreateRoom(string roomName, string password, int maxPlayers, int gameMode)
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        Debug.LogWarning("[NetworkRunnerManager] CreateRoom is not supported on WebGL (Host Mode). Ignoring.");
+        return;
+#endif
         if (IsBusy) return;
         IsBusy = true;
         SelectedGameMode = gameMode;

@@ -15,6 +15,11 @@ public class RoomBrowserUI : MonoBehaviour
     [SerializeField] private ModalWindowManager versusPregameLobbyModal;
     [SerializeField] private ModalWindowManager createRoomModal;
 
+    [Header("Create Room Button (WebGL lock)")]
+    [SerializeField] private ButtonManager createRoomButton;
+    [SerializeField] private GameObject createRoomDisabledOverlay;
+    [SerializeField] private GameObject createRoomNotAvailableText;
+
     private void Start()
     {
         if (searchInput != null)
@@ -23,6 +28,12 @@ public class RoomBrowserUI : MonoBehaviour
         NetworkRunnerManager.Instance.SessionListUpdated += HandleSessionListUpdated;
         NetworkRunnerManager.Instance.OnJoinedSession += HandleJoinedSession;
         NetworkRunnerManager.Instance.OnJoinFailed += HandleJoinFailed;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        if (createRoomButton != null) createRoomButton.Interactable(false);
+        if (createRoomDisabledOverlay != null) createRoomDisabledOverlay.SetActive(true);
+        if (createRoomNotAvailableText != null) createRoomNotAvailableText.SetActive(true);
+#endif
     }
 
     private void OnEnable()
@@ -80,6 +91,9 @@ public class RoomBrowserUI : MonoBehaviour
 
     public void OnCreateRoomClicked()
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return;
+#endif
         if (NetworkRunnerManager.Instance.IsBusy) return;
         if (roomBrowserModal != null) roomBrowserModal.CloseWindow();
         if (createRoomModal != null) createRoomModal.OpenWindow();
